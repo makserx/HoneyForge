@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Antigravity & AI Agent artifacts
+.antigravity/
+.antigravity*
+.agy/
+.agents/
+.agent/
+_agents/
+_agent/
+.gemini/
+AGENTS.md
+GEMINI.md
+*.agy
+.antigravity-trace/

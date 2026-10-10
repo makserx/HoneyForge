@@ -1,0 +1,77 @@
+services:
+  # Low-Interaction Multi-Port Emulator (FTP, SSH, Telnet, HTTP, MySQL, Redis)
+  low-interaction-decoy:
+    build:
+      context: ./low-interaction
+      dockerfile: Dockerfile
+    container_name: honeyforge-low-decoy
+    restart: unless-stopped
+    ports:
+      - "21:21"
+      - "23:23"
+      - "80:80"
+      - "3306:3306"
+      - "6379:6379"
+    networks:
+      - honeyforge-net
+
+  # Medium-Interaction Vulnerable HTTP Decoy (Log4j, Spring4Shell, phpMyAdmin)
+  http-vulnerable-trap:
+    build:
+      context: ./medium-interaction/http-trap
+      dockerfile: Dockerfile
+    container_name: honeyforge-http-trap
+    restart: unless-stopped
+    environment:
+      - TRAP_PORT=8080
+      - TRAP_LOG_FILE=/var/log/honeyforge/http_trap.json
+    ports:
+      - "8081:8080"
+    volumes:
+      - trap-logs:/var/log/honeyforge
+    networks:
+      - honeyforge-net
+
+  # Medium-Interaction Cowrie SSH/Telnet Decoy (Interactive Shell & Keystroke Logger)
+  cowrie-ssh-trap:
+    build:
+      context: ./medium-interaction/cowrie
+      dockerfile: Dockerfile
+    container_name: honeyforge-cowrie-trap
+    restart: unless-stopped
+    ports:
+      - "2222:2222"
+    volumes:
+      - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie
+    networks:
+      - honeyforge-net
+
+  # Autonomous Forwarding Agent (MASK-4 / MASK-5)
+  stealth-agent:
+    build:
+      context: ../agent
+      dockerfile: Dockerfile
+    container_name: honeyforge-stealth-agent
+    restart: unless-stopped
+    environment:
+      - CONTROL_SERVER=http://control-server:3000
+      - AGENT_ID=node_docker_cluster_01
+      - MASK_NAME=systemd-resolved
+      - COWRIE_LOG_PATH=/cowrie/cowrie-git/var/log/cowrie/cowrie.json
+      - HTTP_TRAP_LOG_PATH=/var/log/honeyforge/http_trap.json
+    depends_on:
+      - cowrie-ssh-trap
+      - http-vulnerable-trap
+    volumes:
+      - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie:ro
+      - trap-logs:/var/log/honeyforge:ro
+    networks:
+      - honeyforge-net
+
+volumes:
+  cowrie-logs:
+  trap-logs:
+
+networks:
+  honeyforge-net:
+    driver: bridge

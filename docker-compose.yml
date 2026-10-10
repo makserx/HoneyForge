@@ -1,0 +1,93 @@
+services:
+  # 1. HoneyForge Control Plane (Web UI & Masked Control API)
+  control-server:
+    build:
+      context: ./honey-forge-nextjs
+      dockerfile: Dockerfile
+    container_name: honeyforge-control-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - honeyforge-db-data:/app/data
+    networks:
+      - honeyforge-network
+
+  # 2. Low-Interaction Multi-Port Banner Emulator
+  low-interaction-decoy:
+    build:
+      context: ./honeypots/low-interaction
+      dockerfile: Dockerfile
+    container_name: honeyforge-low-decoy
+    restart: unless-stopped
+    ports:
+      - "2121:21"
+      - "2323:23"
+      - "8082:80"
+      - "3307:3306"
+      - "6380:6379"
+    networks:
+      - honeyforge-network
+
+  # 3. Medium-Interaction Vulnerable HTTP Decoy (Log4j, Spring4Shell, phpMyAdmin)
+  http-vulnerable-trap:
+    build:
+      context: ./honeypots/medium-interaction/http-trap
+      dockerfile: Dockerfile
+    container_name: honeyforge-http-trap
+    restart: unless-stopped
+    environment:
+      - TRAP_PORT=8080
+      - TRAP_LOG_FILE=/var/log/honeyforge/http_trap.json
+    ports:
+      - "8081:8080"
+    volumes:
+      - trap-logs:/var/log/honeyforge
+    networks:
+      - honeyforge-network
+
+  # 4. Medium-Interaction Cowrie SSH/Telnet Trap
+  cowrie-ssh-trap:
+    build:
+      context: ./honeypots/medium-interaction/cowrie
+      dockerfile: Dockerfile
+    container_name: honeyforge-cowrie-trap
+    restart: unless-stopped
+    ports:
+      - "2222:2222"
+    volumes:
+      - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie
+    networks:
+      - honeyforge-network
+
+  # 5. Stealth Honeypot Forwarding Agent (MASK-4 / MASK-5)
+  stealth-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: honeyforge-stealth-agent
+    restart: unless-stopped
+    environment:
+      - CONTROL_SERVER=http://control-server:3000
+      - AGENT_ID=node_cluster_edge_01
+      - MASK_NAME=systemd-resolved
+      - COWRIE_LOG_PATH=/cowrie/cowrie-git/var/log/cowrie/cowrie.json
+      - HTTP_TRAP_LOG_PATH=/var/log/honeyforge/http_trap.json
+    depends_on:
+      - control-server
+      - cowrie-ssh-trap
+      - http-vulnerable-trap
+    volumes:
+      - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie:ro
+      - trap-logs:/var/log/honeyforge:ro
+    networks:
+      - honeyforge-network
+
+volumes:
+  honeyforge-db-data:
+  cowrie-logs:
+  trap-logs:
+
+networks:
+  honeyforge-network:
+    driver: bridge
