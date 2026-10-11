@@ -8,12 +8,33 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    environment:
+      - ADMIN_TOKEN=honeyforge-secret-soc-2026
     volumes:
       - honeyforge-db-data:/app/data
     networks:
-      - honeyforge-network
+      - mgmt_net
 
-  # 2. Low-Interaction Multi-Port Banner Emulator
+  # 2. Nginx TLS Reverse-Proxy & Camouflage Gateway (MASK-1, MASK-2)
+  nginx:
+    image: nginx:1.24-alpine
+    container_name: honeyforge-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - control-server
+    networks:
+      mgmt_net:
+        aliases:
+          - nginx
+          - control-server-tls
+
+  # 3. Low-Interaction Multi-Port Banner Emulator
   low-interaction-decoy:
     build:
       context: ./honeypots/low-interaction
@@ -27,9 +48,9 @@ services:
       - "3307:3306"
       - "6380:6379"
     networks:
-      - honeyforge-network
+      - decoy_net
 
-  # 3. Medium-Interaction Vulnerable HTTP Decoy (Log4j, Spring4Shell, phpMyAdmin)
+  # 4. Medium-Interaction Vulnerable HTTP Decoy (Log4j, Spring4Shell, phpMyAdmin)
   http-vulnerable-trap:
     build:
       context: ./honeypots/medium-interaction/http-trap
@@ -44,9 +65,9 @@ services:
     volumes:
       - trap-logs:/var/log/honeyforge
     networks:
-      - honeyforge-network
+      - decoy_net
 
-  # 4. Medium-Interaction Cowrie SSH/Telnet Trap
+  # 5. Medium-Interaction Cowrie SSH/Telnet Trap
   cowrie-ssh-trap:
     build:
       context: ./honeypots/medium-interaction/cowrie
@@ -58,9 +79,9 @@ services:
     volumes:
       - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie
     networks:
-      - honeyforge-network
+      - decoy_net
 
-  # 5. Stealth Honeypot Forwarding Agent (MASK-4 / MASK-5)
+  # 6. Stealth Honeypot Forwarding Agent (MASK-1, MASK-4, MASK-5)
   stealth-agent:
     build:
       context: ./agent
@@ -68,20 +89,25 @@ services:
     container_name: honeyforge-stealth-agent
     restart: unless-stopped
     environment:
-      - CONTROL_SERVER=http://control-server:3000
+      - CONTROL_SERVER=https://nginx:443
       - AGENT_ID=node_cluster_edge_01
       - MASK_NAME=systemd-resolved
       - COWRIE_LOG_PATH=/cowrie/cowrie-git/var/log/cowrie/cowrie.json
       - HTTP_TRAP_LOG_PATH=/var/log/honeyforge/http_trap.json
+      - CA_CERT_PATH=/certs/server.crt
+      - AGENT_INSECURE_TLS=1
     depends_on:
       - control-server
+      - nginx
       - cowrie-ssh-trap
       - http-vulnerable-trap
     volumes:
       - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie:ro
       - trap-logs:/var/log/honeyforge:ro
+      - ./certs:/certs:ro
     networks:
-      - honeyforge-network
+      - decoy_net
+      - mgmt_net
 
 volumes:
   honeyforge-db-data:
@@ -89,5 +115,9 @@ volumes:
   trap-logs:
 
 networks:
-  honeyforge-network:
+  # Isolated Decoy Perimeter - attackers & honeypots only
+  decoy_net:
+    driver: bridge
+  # Protected Management Plane - control server, nginx TLS proxy & agent link only
+  mgmt_net:
     driver: bridge

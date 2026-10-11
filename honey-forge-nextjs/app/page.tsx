@@ -13,6 +13,7 @@ import { ProfileConstructorView } from '@/components/ProfileConstructorView';
 import { AttackFeedView } from '@/components/AttackFeedView';
 import { DeployModal } from '@/components/DeployModal';
 import { EventDetailModal } from '@/components/EventDetailModal';
+import { OperatorLoginModal } from '@/components/OperatorLoginModal';
 import {
   ShieldIcon,
   ServerIcon,
@@ -20,6 +21,7 @@ import {
   ActivityIcon,
   ZapIcon,
   RefreshCwIcon,
+  LockIcon,
 } from '@/components/icons';
 
 type ActiveTab = 'dashboard' | 'nodes' | 'profiles' | 'feed';
@@ -34,17 +36,37 @@ export default function Home() {
   const [inspectEvent, setInspectEvent] = useState<AttackEvent | null>(null);
   const [deployModalNode, setDeployModalNode] = useState<HoneypotNode | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // Fetch initial REST data
   const loadInitialData = useCallback(async () => {
     try {
-      const [resStats, resNodes, resProfiles, resEvents] = await Promise.all([
-        fetch('/api/control/stats').then((r) => r.json()),
-        fetch('/api/control/nodes').then((r) => r.json()),
-        fetch('/api/control/profiles').then((r) => r.json()),
-        fetch('/api/control/events?limit=100').then((r) => r.json()),
+      const [resStatsRaw, resNodesRaw, resProfilesRaw, resEventsRaw] = await Promise.all([
+        fetch('/api/control/stats'),
+        fetch('/api/control/nodes'),
+        fetch('/api/control/profiles'),
+        fetch('/api/control/events?limit=100'),
       ]);
 
+      if (
+        resStatsRaw.status === 401 ||
+        resNodesRaw.status === 401 ||
+        resProfilesRaw.status === 401 ||
+        resEventsRaw.status === 401
+      ) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      const [resStats, resNodes, resProfiles, resEvents] = await Promise.all([
+        resStatsRaw.json(),
+        resNodesRaw.json(),
+        resProfilesRaw.json(),
+        resEventsRaw.json(),
+      ]);
+
+      setIsAuthenticated(true);
       if (resStats && !resStats.error) setStats(resStats);
       if (resNodes?.nodes) setNodes(resNodes.nodes);
       if (resProfiles?.profiles) setProfiles(resProfiles.profiles);
@@ -56,41 +78,40 @@ export default function Home() {
     }
   }, []);
 
+  // Check operator authentication status on startup
   useEffect(() => {
     let ignore = false;
-    const fetchInit = async () => {
+    const checkAndLoad = async () => {
       try {
-        const [resStats, resNodes, resProfiles, resEvents] = await Promise.all([
-          fetch('/api/control/stats').then((r) => r.json()),
-          fetch('/api/control/nodes').then((r) => r.json()),
-          fetch('/api/control/profiles').then((r) => r.json()),
-          fetch('/api/control/events?limit=100').then((r) => r.json()),
-        ]);
-
-        if (!ignore) {
-          if (resStats && !resStats.error) setStats(resStats);
-          if (resNodes?.nodes) setNodes(resNodes.nodes);
-          if (resProfiles?.profiles) setProfiles(resProfiles.profiles);
-          if (resEvents?.events) setEvents(resEvents.events);
+        const authRes = await fetch('/api/control/auth');
+        const authData = await authRes.json().catch(() => ({ authenticated: false }));
+        if (ignore) return;
+        if (!authData?.authenticated) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error('[Dashboard] Error fetching initial data:', err);
-      } finally {
+        setIsAuthenticated(true);
+        loadInitialData();
+      } catch {
         if (!ignore) {
+          setIsAuthenticated(false);
           setIsLoading(false);
         }
       }
     };
 
-    fetchInit();
+    checkAndLoad();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [loadInitialData]);
 
   // Connect to SSE Server-Sent Events stream for real-time attack alerts
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     let eventSource: EventSource | null = null;
     let reconnectTimer: NodeJS.Timeout | null = null;
 
@@ -164,7 +185,7 @@ export default function Home() {
       if (eventSource) eventSource.close();
       if (reconnectTimer) clearTimeout(reconnectTimer);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Simulate Attack Action
   const handleSimulateAttack = async () => {
@@ -192,6 +213,22 @@ export default function Home() {
     } catch {
       alert('Ошибка при очистке журнала');
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/control/auth', { method: 'DELETE' });
+    } catch {
+      // ignore
+    }
+    setIsAuthenticated(false);
+    setSseStatus('disconnected');
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setIsLoading(true);
+    loadInitialData();
   };
 
   return (
@@ -310,6 +347,15 @@ export default function Home() {
             >
               <RefreshCwIcon className="w-4 h-4" />
             </button>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer text-xs"
+              title="Завершить сессию оператора SOC"
+            >
+              <LockIcon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Выйти</span>
+            </button>
           </div>
         </div>
 
@@ -406,6 +452,10 @@ export default function Home() {
           event={inspectEvent}
           onClose={() => setInspectEvent(null)}
         />
+      )}
+
+      {!isAuthenticated && (
+        <OperatorLoginModal onSuccess={handleLoginSuccess} />
       )}
 
       {/* Footer */}

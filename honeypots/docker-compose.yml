@@ -54,17 +54,20 @@ services:
     container_name: honeyforge-stealth-agent
     restart: unless-stopped
     environment:
-      - CONTROL_SERVER=http://control-server:3000
+      - CONTROL_SERVER=https://nginx:443
       - AGENT_ID=node_docker_cluster_01
       - MASK_NAME=systemd-resolved
       - COWRIE_LOG_PATH=/cowrie/cowrie-git/var/log/cowrie/cowrie.json
       - HTTP_TRAP_LOG_PATH=/var/log/honeyforge/http_trap.json
+      - CA_CERT_PATH=/certs/server.crt
+      - AGENT_INSECURE_TLS=1
     depends_on:
       - cowrie-ssh-trap
       - http-vulnerable-trap
     volumes:
       - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie:ro
       - trap-logs:/var/log/honeyforge:ro
+      - ../certs:/certs:ro
     networks:
       - honeyforge-net
 

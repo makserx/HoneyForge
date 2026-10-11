@@ -20,13 +20,14 @@ import argparse
 import logging
 import threading
 import signal
+import ssl
 import urllib.request
 import urllib.error
 import urllib.parse
 from datetime import datetime
 
-# Default configuration parameters
-DEFAULT_SERVER = "http://localhost:3000"
+# Default configuration parameters (MASK-1: TLS encrypted control channel)
+DEFAULT_SERVER = "https://localhost:443"
 DEFAULT_MASK_NAME = "systemd-resolved"
 DEFAULT_BEACON_INTERVAL = 15
 DEFAULT_JITTER_PERCENT = 20
@@ -538,12 +539,16 @@ class HoneyForgeAgent:
         mask_name: str,
         cowrie_log_path: str = "",
         http_trap_log_path: str = "",
+        ca_cert_path: str = "",
+        insecure_tls: bool = True,
     ):
         self.server_url = server_url.rstrip("/")
         self.agent_id = agent_id
         self.mask_name = mask_name
         self.cowrie_log_path = cowrie_log_path
         self.http_trap_log_path = http_trap_log_path
+        self.ca_cert_path = ca_cert_path
+        self.insecure_tls = insecure_tls
         self.hostname = socket.gethostname()
         self.os_info = f"{platform.system()} {platform.release()} ({platform.machine()})"
         self.version = "1.2.0"
@@ -563,6 +568,51 @@ class HoneyForgeAgent:
         self.log_url = f"{self.server_url}/api/v1/assets/log"
         self.manifest_url = f"{self.server_url}/api/v1/assets/manifest"
 
+        # Initialize SSL/TLS context for secure telemetry (MASK-1)
+        self.ssl_context = self._create_ssl_context()
+
+    def _create_ssl_context(self):
+        """Configures SSL/TLS context with custom CA support and permissive fallback (MASK-1)."""
+        if not self.server_url.lower().startswith("https://"):
+            return None
+
+        try:
+            ctx = ssl.create_default_context()
+
+            # Locate CA certificate if supplied or exists in common directories
+            ca_candidate = self.ca_cert_path
+            if not ca_candidate:
+                for candidate in ["/certs/server.crt", "certs/server.crt", "../certs/server.crt"]:
+                    if os.path.exists(candidate):
+                        ca_candidate = candidate
+                        break
+
+            if ca_candidate and os.path.exists(ca_candidate):
+                try:
+                    ctx.load_verify_locations(cafile=ca_candidate)
+                    logger.info(f"[MASK-1] Loaded local TLS CA certificate: '{ca_candidate}'")
+                except Exception as err:
+                    logger.warning(f"[MASK-1] Could not load CA file '{ca_candidate}': {err}")
+
+            if self.insecure_tls:
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                logger.info("[MASK-1] Permissive TLS mode active for self-signed certificates")
+            else:
+                logger.info("[MASK-1] Strict TLS verification enabled")
+
+            return ctx
+        except Exception as exc:
+            logger.warning(f"[MASK-1] Error configuring SSL context ({exc}), using unverified fallback")
+            return ssl._create_unverified_context()
+
+    def _urlopen_kwargs(self, timeout: float = 10.0) -> dict:
+        """Helper returning keyword arguments for urllib.request.urlopen."""
+        kwargs = {"timeout": timeout}
+        if self.ssl_context is not None and self.server_url.lower().startswith("https://"):
+            kwargs["context"] = self.ssl_context
+        return kwargs
+
     def stop(self):
         logger.info("[*] Stopping HoneyForge Stealth Agent...")
         self.running = False
@@ -577,8 +627,10 @@ class HoneyForgeAgent:
             time.sleep(min(0.5, max(0.0, end - time.time())))
 
     def run(self):
+        is_https = self.server_url.lower().startswith("https://")
+        enc_info = "TLS Encrypted (MASK-1)" if is_https else "Plaintext HTTP"
         logger.info(f"[*] Starting HoneyForge Stealth Agent [ID: {self.agent_id}]")
-        logger.info(f"[*] Target Control Server: {self.server_url}")
+        logger.info(f"[*] Target Control Server: {self.server_url} [{enc_info}]")
 
         # Apply process title mask (MASK-4)
         ProcessMasker.apply_mask(self.mask_name)
@@ -615,7 +667,7 @@ class HoneyForgeAgent:
                     "Accept": "application/json",
                 },
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, **self._urlopen_kwargs(10)) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 if "profile" in data:
                     self.apply_profile(data["profile"], data.get("hash", ""))
@@ -710,7 +762,7 @@ class HoneyForgeAgent:
                         "X-Forwarded-Client": "TelemetrySink/2.1",
                     },
                 )
-                with urllib.request.urlopen(req, timeout=8) as resp:
+                with urllib.request.urlopen(req, **self._urlopen_kwargs(8)) as resp:
                     if resp.status in (200, 201, 202):
                         synced_ids = [e["id"] for e in unsynced]
                         self.buffer.mark_synced(synced_ids)
@@ -755,7 +807,7 @@ class HoneyForgeAgent:
                         "User-Agent": "TelemetryWorker/3.1 (Debian GNU/Linux)",
                     },
                 )
-                with urllib.request.urlopen(req, timeout=10) as resp:
+                with urllib.request.urlopen(req, **self._urlopen_kwargs(10)) as resp:
                     if resp.status == 200:
                         res_data = json.loads(resp.read().decode("utf-8"))
                         # Check if server pushed an updated profile
@@ -771,11 +823,25 @@ class HoneyForgeAgent:
 
 def main():
     parser = argparse.ArgumentParser(description="HoneyForge Stealth Honeypot Agent")
-    parser.add_argument("--server", default=os.environ.get("CONTROL_SERVER", DEFAULT_SERVER), help="Control server URL (e.g. http://192.168.1.100:3000)")
+    parser.add_argument("--server", default=os.environ.get("CONTROL_SERVER", DEFAULT_SERVER), help="Control server URL (e.g. https://nginx:443 or https://localhost:443)")
     parser.add_argument("--id", default=os.environ.get("AGENT_ID", f"node_{socket.gethostname()[:8]}_{random.randint(100, 999)}"), help="Unique agent identifier")
     parser.add_argument("--mask", default=os.environ.get("MASK_NAME", DEFAULT_MASK_NAME), help="Process disguise name (MASK-4)")
     parser.add_argument("--cowrie-log", default=os.environ.get("COWRIE_LOG_PATH", ""), help="Path to Cowrie JSON log file to tail and forward")
     parser.add_argument("--http-log", default=os.environ.get("HTTP_TRAP_LOG_PATH", ""), help="Path to HTTP Trap JSON log file to tail and forward")
+    parser.add_argument("--ca-cert", default=os.environ.get("CA_CERT_PATH", ""), help="Path to CA/self-signed certificate (server.crt) for TLS verification (MASK-1)")
+    parser.add_argument(
+        "--insecure",
+        dest="insecure_tls",
+        action="store_true",
+        default=os.environ.get("AGENT_INSECURE_TLS", "1").lower() in ("1", "true", "yes"),
+        help="Permissive TLS validation for local self-signed certificates (default: enabled)",
+    )
+    parser.add_argument(
+        "--no-insecure",
+        dest="insecure_tls",
+        action="store_false",
+        help="Enforce strict hostname and certificate chain validation",
+    )
     args = parser.parse_args()
 
     agent = HoneyForgeAgent(
@@ -784,6 +850,8 @@ def main():
         mask_name=args.mask,
         cowrie_log_path=args.cowrie_log,
         http_trap_log_path=args.http_log,
+        ca_cert_path=args.ca_cert,
+        insecure_tls=args.insecure_tls,
     )
 
     def handle_signal(sig, _frame):

@@ -62,6 +62,10 @@ const DEFAULT_PROFILES: HoneypotProfile[] = [
         enabled: true,
       },
     ],
+    decoyCredentials: [
+      { username: 'root', password: 'password123', role: 'Администратор' },
+      { username: 'admin', password: 'admin@2026', role: 'Служебный аккаунт' },
+    ],
     agentConfig: {
       beaconIntervalSeconds: 15,
       jitterPercent: 20,
@@ -99,6 +103,10 @@ const DEFAULT_PROFILES: HoneypotProfile[] = [
         enabled: true,
       },
     ],
+    decoyCredentials: [
+      { username: 'admin', password: 'admin', role: 'Шлюз IoT' },
+      { username: 'default', password: 'password', role: 'Устройство' },
+    ],
     agentConfig: {
       beaconIntervalSeconds: 10,
       jitterPercent: 25,
@@ -129,6 +137,10 @@ const DEFAULT_PROFILES: HoneypotProfile[] = [
         banner: 'Ubuntu 20.04.2 LTS\nlogin: ',
         enabled: true,
       },
+    ],
+    decoyCredentials: [
+      { username: 'support', password: 'Password@2026', role: 'Техподдержка' },
+      { username: 'deploy', password: 'deploy_secret_token', role: 'CI/CD Воркер' },
     ],
     agentConfig: {
       beaconIntervalSeconds: 20,
@@ -657,6 +669,9 @@ export function getEvents(filter?: {
   severity?: string;
   agentId?: string;
   search?: string;
+  from?: string;
+  to?: string;
+  type?: string;
 }): { events: AttackEvent[]; total: number } {
   const db = getDb();
   let list = [...db.events];
@@ -668,8 +683,26 @@ export function getEvents(filter?: {
     list = list.filter((e) => e.severity === filter.severity);
   }
 
+  if (filter?.type && filter.type !== 'all') {
+    list = list.filter((e) => e.eventType === filter.type);
+  }
+
   if (filter?.agentId && filter.agentId !== 'all') {
     list = list.filter((e) => e.agentId === filter.agentId);
+  }
+
+  if (filter?.from) {
+    const fromTime = new Date(filter.from).getTime();
+    if (!isNaN(fromTime)) {
+      list = list.filter((e) => new Date(e.timestamp).getTime() >= fromTime);
+    }
+  }
+
+  if (filter?.to) {
+    const toTime = new Date(filter.to).getTime();
+    if (!isNaN(toTime)) {
+      list = list.filter((e) => new Date(e.timestamp).getTime() <= toTime);
+    }
   }
 
   if (filter?.search) {

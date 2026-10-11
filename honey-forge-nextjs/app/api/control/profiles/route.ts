@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       honeypotType: body.honeypotType || 'emulator',
       ports: Array.isArray(body.ports) ? body.ports : [22, 80],
       services: Array.isArray(body.services) ? body.services : [],
+      decoyCredentials: Array.isArray(body.decoyCredentials) ? body.decoyCredentials : [],
       agentConfig: body.agentConfig || {
         beaconIntervalSeconds: 15,
         jitterPercent: 20,

@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
     const severity = searchParams.get('severity') || undefined;
     const agentId = searchParams.get('agentId') || undefined;
     const search = searchParams.get('search') || undefined;
+    const from = searchParams.get('from') || undefined;
+    const to = searchParams.get('to') || undefined;
+    const type = searchParams.get('type') || undefined;
 
     const { events, total } = getEvents({
       limit: Math.min(Math.max(limit, 1), 500),
@@ -16,6 +19,9 @@ export async function GET(req: NextRequest) {
       severity,
       agentId,
       search,
+      from,
+      to,
+      type,
     });
 
     return NextResponse.json(

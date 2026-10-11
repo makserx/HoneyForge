@@ -1,30 +1,32 @@
-# HoneyForge Stealth Honeypot Agent (`agent.py`)
+# Скрытый агент-сенсор HoneyForge (`agent.py`)
 
-Autonomous, lightweight, zero-dependency stealth sensor for decentralized honeypot nodes.
-
----
-
-## Key Features & Capabilities
-
-- **Zero External Dependencies**: Built entirely using the Python 3 standard library (`sqlite3`, `urllib.request`, `socket`, `threading`, `ctypes`). No `pip install` required.
-- **Process Title Masking (MASK-4)**: Modifies `sys.argv[0]` and calls Linux `prctl(PR_SET_NAME, ...)` to disguise itself in process monitors (`ps -ef`, `top`, `htop`) under innocuous system daemon names such as `systemd-resolved`, `kworker/u2:0`, or `rsyslogd`.
-- **Network Jitter (MASK-5)**: Randomizes heartbeat intervals (`interval ± jitter%`) to prevent behavioral detection and network correlation by intrusion detection systems (IDS/NDR).
-- **Disguised Telemetry Endpoints (MASK-2)**: Heartbeats are disguised as `POST /api/v1/metrics/beacon`, and attack ingestion as `POST /api/v1/assets/log` to blend in with legitimate telemetry.
-- **Local SQLite Buffering (FR-A4)**: Intercepted attacks are committed to `agent_buffer.db`. If the control server or network is unreachable, events remain buffered safely and are drained upon reconnect.
-- **Dynamic Configuration Sync (FR-A3)**: The agent continuously polls the control server. When an administrator re-assigns or modifies a honeypot profile in HoneyForge UI, the agent pulls the new profile and live-reloads open emulation ports and banners without restarting.
-- **Built-in Port & Banner Emulator**: Listens on configured TCP ports, outputs customizable banners, captures attacker payloads/credentials/shell commands, and tags event severity.
+Автономный, легковесный, не требующий внешних зависимостей (zero-dependency) скрытый сенсор для децентрализованных honeypot-нод.
 
 ---
 
-## Quick Start
+## Ключевые возможности и особенности
 
-### 1. Launch Agent Interactively
+- **Шифрование канала телеметрии (MASK-1, TLS/HTTPS)**: Все сетевые взаимодействия (опрос маяка, получение манифеста, передача перехваченных событий) осуществляются строго по зашифрованному протоколу TLS (HTTPS) с поддержкой кастомных CA и самоподписанных сертификатов без передачи открытого текста в сеть.
+- **Отсутствие внешних зависимостей (Zero External Dependencies)**: Написан исключительно с использованием стандартной библиотеки Python 3 (`sqlite3`, `ssl`, `urllib.request`, `socket`, `threading`, `ctypes`). Не требует установки сторонних пакетов через `pip install`.
+- **Маскировка имени процесса (MASK-4)**: Модифицирует `sys.argv[0]` и вызывает Linux-системный вызов `prctl(PR_SET_NAME, ...)` для скрытия процесса в системных мониторах (`ps -ef`, `top`, `htop`) под видом легитимных системных демонов, таких как `systemd-resolved`, `kworker/u2:0` или `rsyslogd`.
+- **Сетевой джиттер (MASK-5)**: Рандомизирует интервалы отправки маяков (`интервал ± джиттер%`) для предотвращения поведенческого детектирования и корреляции сетевого трафика системами обнаружения вторжений (IDS/NDR).
+- **Замаскированные эндпоинты телеметрии (MASK-2)**: Сигналы маяка маскируются под `POST /api/v1/metrics/beacon`, а отправка перехваченных атак — под `POST /api/v1/assets/log`, мимикрируя под штатный трафик мониторинга и веб-ассетов.
+- **Локальная буферизация в SQLite (FR-A4)**: Перехваченные атаки сохраняются в транзакционную базу `agent_buffer.db`. При недоступности сервера управления или сбоях сети события остаются сохранены и гарантированно отправляются пачкой после восстановления связи.
+- **Динамическая синхронизация конфигурации (FR-A3)**: Агент периодически опрашивает сервер управления. При изменении или назначении профиля в веб-интерфейсе HoneyForge агент получает обновленный манифест и на лету перезагружает открытые порты эмуляции и баннеры без перезапуска процесса.
+- **Встроенный эмулятор портов и баннеров**: Прослушивает настроенные TCP-порты, выдает настраиваемые баннеры, перехватывает полезную нагрузку (пейлоады), учетные данные и шелл-команды атакующих, а также автоматически классифицирует уровень критичности инцидентов.
+- **Сбор логов сторонних ловушек**: Включает встроенные модули парсинга и тейлинга логов Cowrie SSH (`cowrie.json`) и HTTP-ловушек веб-эксплойтов.
+
+---
+
+## Быстрый старт
+
+### 1. Интерактивный запуск агента (TLS)
 ```bash
-python3 agent.py --server http://192.168.1.100:3000 --id node_dmz_01 --mask systemd-resolved
+python3 agent.py --server https://192.168.1.100:443 --id node_dmz_01 --mask systemd-resolved --ca-cert certs/server.crt
 ```
 
-### 2. Disguised Background Service (Linux Systemd)
-Create `/etc/systemd/system/systemd-resolved-svc.service`:
+### 2. Фоновая служба с маскировкой (Linux Systemd)
+Создайте юнит `/etc/systemd/system/systemd-resolved-svc.service`:
 ```ini
 [Unit]
 Description=Network Name Resolution Service (Masked HoneyForge Agent)
@@ -33,7 +35,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/python3 /opt/honeyforge/agent.py --server "http://192.168.1.100:3000" --id "node_dmz_01" --mask "systemd-resolved"
+ExecStart=/usr/bin/python3 /opt/honeyforge/agent.py --server "https://192.168.1.100:443" --id "node_dmz_01" --mask "systemd-resolved" --ca-cert "/opt/honeyforge/certs/server.crt"
 Restart=always
 RestartSec=10
 StandardOutput=null
@@ -43,14 +45,14 @@ StandardError=null
 WantedBy=multi-user.target
 ```
 
-Enable and start:
+Активация и запуск:
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now systemd-resolved-svc
 ```
 
-### 3. Verify Process Masking
+### 3. Проверка маскировки процесса
 ```bash
 ps -ef | grep systemd-resolved
 ```
-The agent process appears masked, hiding the Python script name and its command line arguments.
+Процесс агента отображается замаскированным под системный сервис, скрывая имя исходного Python-скрипта и переданные аргументы командной строки.

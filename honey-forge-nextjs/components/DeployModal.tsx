@@ -13,7 +13,7 @@ export function DeployModal({ node, onClose }: Props) {
   const [copiedType, setCopiedType] = useState<string | null>(null);
   const [fallbackId] = useState(() => 'node_' + Math.random().toString(36).substring(2, 8));
 
-  const serverUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const serverUrl = typeof window !== 'undefined' ? window.location.origin : 'https://localhost:443';
   const agentId = node ? node.id : fallbackId;
   const maskName = node ? node.maskProcess : 'systemd-resolved';
 

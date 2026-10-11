@@ -9,33 +9,36 @@
 ## Архитектура системы
 
 ```
-                             [ ATTACKER / SCANNER ]
+                           [ АТАКУЮЩИЙ / СКАНЕР СЕТИ ]
                                        │
                    ┌───────────────────┴───────────────────┐
                    ▼                                       ▼
-     [ Low-Interaction Ports ]               [ Medium-Interaction Decoys ]
-      - Port/Banner Emulator                  - Cowrie Interactive SSH/Telnet
-      - Ports: 21, 23, 80, 3306, 6379         - Vulnerable HTTP Trap (Log4j, Spring)
+     [ Low-Interaction порты ]               [ Medium-Interaction ловушки ]
+      - Эмулятор портов и баннеров            - Интерактивный SSH/Telnet Cowrie
+      - Порты: 21, 23, 80, 3306, 6379         - Уязвимая HTTP-ловушка (Log4j, Spring)
                    │                                       │
                    └───────────────────┬───────────────────┘
                                        ▼
-                       [ STEALTH SENSOR: agent.py ]
-                        - MASK-4: Disguised as [systemd-resolved]
-                        - MASK-5: Heartbeat Jitter ±20%
-                        - FR-A4: Local SQLite buffer (offline-resilient)
-                        - FR-A3: Dynamic profile sync & hot-reload
+                      [ СКРЫТЫЙ СЕНСОР: agent.py ]
+                       - MASK-4: Маскировка под [systemd-resolved]
+                       - MASK-5: Джиттер сетевого маяка ±20%
+                       - FR-A4: Локальный SQLite-буфер (оффлайн-устойчивость)
+                       - FR-A3: Динамическая синхронизация и hot-reload
                                        │
-                      Disguised Telemetry (MASK-2):
+                      Замаскированная телеметрия (MASK-1 / MASK-2):
+                      HTTPS / TLS (Port 443) -> Nginx Reverse-Proxy
                       POST /api/v1/metrics/beacon
                       POST /api/v1/assets/log
                                        │
                                        ▼
-                     [ HONEYFORGE CONTROL SERVER ]
-                      - Next.js App Router Control API
-                      - Real-Time Attack Telemetry Feed (SSE)
-                      - Profile Constructor (FR-C1)
-                      - Honeypot Fleet Monitoring (FR-C2)
-                      - IOC Inspector & Threat Visualizer
+                    [ NGINX TLS ШЛЮЗ + СЕРВЕР HONEYFORGE ]
+                     - MASK-1: Шифрование канала (TLS 1.2/1.3, Self-Signed SAN)
+                     - FR-C5: Авторизация оператора SOC (ADMIN_TOKEN / hf_session)
+                     - Control API на Next.js App Router
+                     - Онлайн-лента телеметрии атак (SSE)
+                     - Конструктор профилей ловушек (FR-C1)
+                     - Мониторинг флота ловушек (FR-C2)
+                     - Анализ IOC и визуализация угроз
 ```
 
 ---
@@ -95,7 +98,8 @@ docker compose up -d --build
 ```
 
 После старта:
-- **Web UI & Control API**: [http://localhost:3000](http://localhost:3000)
+- **Защищённый Web UI & Control API (TLS/HTTPS, MASK-1)**: [https://localhost:443](https://localhost:443) (или [http://localhost](http://localhost) с авто-редиректом на HTTPS)
+- **Прямой порт бэкенда (Debug)**: [http://localhost:3000](http://localhost:3000)
 - **Vulnerable HTTP Trap**: [http://localhost:8081](http://localhost:8081)
 - **Cowrie SSH Trap**: `ssh root@localhost -p 2222`
 - **Low-Interaction Decoy**: Порты 2121, 2323, 8082, 3307, 6380

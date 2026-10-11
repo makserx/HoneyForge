@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { HoneypotProfile, HoneypotService, InteractionLevel } from '@/lib/types';
-import { SlidersIcon, PlusIcon, TrashIcon, CheckCircleIcon, ZapIcon } from './icons';
+import { HoneypotProfile, HoneypotService, InteractionLevel, DecoyCredential } from '@/lib/types';
+import { SlidersIcon, PlusIcon, TrashIcon, CheckCircleIcon, ZapIcon, KeyIcon } from './icons';
 
 interface Props {
   profiles: HoneypotProfile[];
@@ -21,6 +21,10 @@ const PRESET_TEMPLATES: Array<Omit<HoneypotProfile, 'id' | 'createdAt' | 'update
       { port: 22, service: 'SSH', banner: 'SSH-2.0-OpenSSH_8.4p1 Debian-5+deb11u1', enabled: true },
       { port: 80, service: 'HTTP', banner: 'Apache/2.4.51 (Debian) Server at localhost Port 80', enabled: true },
       { port: 8080, service: 'Proxy', banner: 'Squid/4.13 Proxy Server', enabled: true },
+    ],
+    decoyCredentials: [
+      { username: 'root', password: 'password123', role: 'Администратор' },
+      { username: 'admin', password: 'admin@2026', role: 'Служебный аккаунт' },
     ],
     agentConfig: {
       beaconIntervalSeconds: 15,
@@ -41,6 +45,10 @@ const PRESET_TEMPLATES: Array<Omit<HoneypotProfile, 'id' | 'createdAt' | 'update
       { port: 80, service: 'HTTP', banner: 'micro_httpd/0.5 (Boa/0.94.13)', enabled: true },
       { port: 554, service: 'RTSP', banner: 'RTSP/1.0 200 OK\r\nServer: HIKVISION Streaming Server\r\n', enabled: true },
     ],
+    decoyCredentials: [
+      { username: 'admin', password: 'admin', role: 'Шлюз IoT' },
+      { username: 'default', password: 'password', role: 'Устройство' },
+    ],
     agentConfig: {
       beaconIntervalSeconds: 10,
       jitterPercent: 30,
@@ -60,6 +68,10 @@ const PRESET_TEMPLATES: Array<Omit<HoneypotProfile, 'id' | 'createdAt' | 'update
       { port: 6379, service: 'Redis', banner: '-ERR unknown command or NOAUTH Authentication required.', enabled: true },
       { port: 5432, service: 'PostgreSQL', banner: 'PostgreSQL 14.2 on x86_64-pc-linux-gnu', enabled: true },
     ],
+    decoyCredentials: [
+      { username: 'postgres', password: 'postgres', role: 'СУБД PostgreSQL' },
+      { username: 'root', password: 'root', role: 'СУБД MySQL' },
+    ],
     agentConfig: {
       beaconIntervalSeconds: 12,
       jitterPercent: 15,
@@ -77,6 +89,10 @@ const PRESET_TEMPLATES: Array<Omit<HoneypotProfile, 'id' | 'createdAt' | 'update
     services: [
       { port: 2222, service: 'Cowrie SSH', banner: 'SSH-2.0-OpenSSH_7.9p1 Debian-10+deb10u2', enabled: true },
       { port: 2323, service: 'Cowrie Telnet', banner: 'Ubuntu 20.04 LTS\nlogin: ', enabled: true },
+    ],
+    decoyCredentials: [
+      { username: 'root', password: 'toor', role: 'Суперпользователь' },
+      { username: 'ubuntu', password: 'ubuntu', role: 'Системный оператор' },
     ],
     agentConfig: {
       beaconIntervalSeconds: 20,
@@ -101,6 +117,10 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
   const [interactionLevel, setInteractionLevel] = useState<InteractionLevel>(initialProfile?.interactionLevel || 'low');
   const [honeypotType, setHoneypotType] = useState<'emulator' | 'cowrie' | 'http_trap' | 'custom'>(initialProfile?.honeypotType || 'emulator');
   const [services, setServices] = useState<HoneypotService[]>(initialProfile?.services ? [...initialProfile.services] : []);
+  const [decoyCredentials, setDecoyCredentials] = useState<DecoyCredential[]>(initialProfile?.decoyCredentials ? [...initialProfile.decoyCredentials] : []);
+  const [newCredUser, setNewCredUser] = useState('');
+  const [newCredPass, setNewCredPass] = useState('');
+  const [newCredRole, setNewCredRole] = useState('');
   const [beaconInterval, setBeaconInterval] = useState(initialProfile?.agentConfig?.beaconIntervalSeconds || 15);
   const [jitterPercent, setJitterPercent] = useState(initialProfile?.agentConfig?.jitterPercent || 20);
   const [maskProcess, setMaskProcess] = useState(initialProfile?.agentConfig?.maskProcessName || 'systemd-resolved');
@@ -121,6 +141,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
         setInteractionLevel(p.interactionLevel);
         setHoneypotType(p.honeypotType);
         setServices([...p.services]);
+        setDecoyCredentials(p.decoyCredentials ? [...p.decoyCredentials] : []);
         setBeaconInterval(p.agentConfig.beaconIntervalSeconds);
         setJitterPercent(p.agentConfig.jitterPercent);
         setMaskProcess(p.agentConfig.maskProcessName);
@@ -138,6 +159,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
     setInteractionLevel(p.interactionLevel);
     setHoneypotType(p.honeypotType);
     setServices([...p.services]);
+    setDecoyCredentials(p.decoyCredentials ? [...p.decoyCredentials] : []);
     setBeaconInterval(p.agentConfig.beaconIntervalSeconds);
     setJitterPercent(p.agentConfig.jitterPercent);
     setMaskProcess(p.agentConfig.maskProcessName);
@@ -156,6 +178,10 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
       { port: 22, service: 'SSH', banner: 'SSH-2.0-OpenSSH_8.4p1 Debian-5+deb11u1', enabled: true },
       { port: 80, service: 'HTTP', banner: 'Apache/2.4.51 (Debian)', enabled: true },
     ]);
+    setDecoyCredentials([
+      { username: 'admin', password: 'password123', role: 'Администратор' },
+      { username: 'support', password: 'support@2026', role: 'Служебный аккаунт' },
+    ]);
     setBeaconInterval(15);
     setJitterPercent(20);
     setMaskProcess('systemd-resolved');
@@ -169,6 +195,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
     setInteractionLevel(preset.interactionLevel);
     setHoneypotType(preset.honeypotType);
     setServices([...preset.services]);
+    setDecoyCredentials(preset.decoyCredentials ? [...preset.decoyCredentials] : []);
     setBeaconInterval(preset.agentConfig.beaconIntervalSeconds);
     setJitterPercent(preset.agentConfig.jitterPercent);
     setMaskProcess(preset.agentConfig.maskProcessName);
@@ -217,6 +244,29 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
     setNewPortBanner('');
   };
 
+  // Decoy credentials manipulations
+  const removeCredential = (idx: number) => {
+    setDecoyCredentials(decoyCredentials.filter((_, i) => i !== idx));
+  };
+
+  const addCredential = () => {
+    if (!newCredUser.trim() || !newCredPass.trim()) {
+      showNotice('Укажите логин и пароль приманки', 'error');
+      return;
+    }
+    setDecoyCredentials([
+      ...decoyCredentials,
+      {
+        username: newCredUser.trim(),
+        password: newCredPass.trim(),
+        role: newCredRole.trim() || 'Пользователь',
+      },
+    ]);
+    setNewCredUser('');
+    setNewCredPass('');
+    setNewCredRole('');
+  };
+
   // Save profile to API
   const handleSave = async () => {
     if (!name.trim()) {
@@ -233,6 +283,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
       honeypotType,
       ports,
       services,
+      decoyCredentials,
       agentConfig: {
         beaconIntervalSeconds: beaconInterval,
         jitterPercent,
@@ -569,6 +620,92 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
               >
                 <PlusIcon className="w-3.5 h-3.5" />
                 Добавить порт
+              </button>
+            </div>
+          </div>
+
+          {/* Decoy Credentials (FR-C1, Honey-Tokens) */}
+          <div className="pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                  <KeyIcon className="w-4 h-4 text-amber-400" />
+                  Учётные данные-приманки (Honey-Credentials / Bait Logins)
+                </label>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Фейковые учетные записи и пароли для отслеживания попыток компрометации и алертинга при входе (FR-C1).
+                </p>
+              </div>
+              <span className="text-xs text-amber-400 font-mono">
+                {decoyCredentials.length} активных пар
+              </span>
+            </div>
+
+            {decoyCredentials.length === 0 ? (
+              <div className="p-3 text-center text-xs text-slate-500 bg-slate-950/40 rounded-lg border border-slate-800">
+                Учётные записи-приманки не заданы. Добавьте фейковый логин и пароль ниже.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                {decoyCredentials.map((cred, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-amber-300 truncate">
+                          {cred.username}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">
+                          {cred.role || 'Пользователь'}
+                        </span>
+                      </div>
+                      <div className="font-mono text-[11px] text-slate-400 truncate mt-0.5">
+                        Пароль: <span className="text-slate-200">{cred.password}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeCredential(idx)}
+                      className="text-slate-500 hover:text-rose-400 p-1 cursor-pointer shrink-0"
+                      title="Удалить приманку"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add New Credential Form */}
+            <div className="mt-3 p-3 rounded-lg bg-slate-950/40 border border-dashed border-slate-800 flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                value={newCredUser}
+                onChange={(e) => setNewCredUser(e.target.value)}
+                placeholder="Логин (admin, root...)"
+                className="w-full sm:w-36 px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-amber-500 font-mono"
+              />
+              <input
+                type="text"
+                value={newCredPass}
+                onChange={(e) => setNewCredPass(e.target.value)}
+                placeholder="Пароль (P@ssw0rd2026...)"
+                className="w-full sm:w-44 px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-amber-500 font-mono"
+              />
+              <input
+                type="text"
+                value={newCredRole}
+                onChange={(e) => setNewCredRole(e.target.value)}
+                placeholder="Роль/описание (Администратор, VPN...)"
+                className="w-full sm:flex-1 px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-amber-500"
+              />
+              <button
+                onClick={addCredential}
+                className="w-full sm:w-auto px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer shrink-0"
+              >
+                <PlusIcon className="w-3.5 h-3.5" />
+                Добавить приманку
               </button>
             </div>
           </div>

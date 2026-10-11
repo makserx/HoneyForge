@@ -27,6 +27,12 @@ export interface AgentStealthConfig {
   logRotationMb: number;
 }
 
+export interface DecoyCredential {
+  username: string;
+  password: string;
+  role?: string;
+}
+
 export interface HoneypotProfile {
   id: string;
   name: string;
@@ -35,6 +41,7 @@ export interface HoneypotProfile {
   honeypotType: 'emulator' | 'cowrie' | 'http_trap' | 'custom';
   ports: number[];
   services: HoneypotService[];
+  decoyCredentials?: DecoyCredential[];
   agentConfig: AgentStealthConfig;
   createdAt: string;
   updatedAt: string;
