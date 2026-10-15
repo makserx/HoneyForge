@@ -38,7 +38,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Fetch initial REST data
+  // Получение начальных REST-данных
   const loadInitialData = useCallback(async () => {
     try {
       const [resStatsRaw, resNodesRaw, resProfilesRaw, resEventsRaw] = await Promise.all([
@@ -78,7 +78,7 @@ export default function Home() {
     }
   }, []);
 
-  // Check operator authentication status on startup
+  // Проверка статуса аутентификации оператора при запуске
   useEffect(() => {
     let ignore = false;
     const checkAndLoad = async () => {
@@ -108,7 +108,7 @@ export default function Home() {
     };
   }, [loadInitialData]);
 
-  // Connect to SSE Server-Sent Events stream for real-time attack alerts
+  // Подключение к потоку Server-Sent Events (SSE) для оповещений об атаках в реальном времени
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -130,7 +130,7 @@ export default function Home() {
           if (payload.type === 'attack_event') {
             const newEvt: AttackEvent = payload.data;
             setEvents((prev) => [newEvt, ...prev.slice(0, 199)]);
-            // Update stats
+            // Обновление статистики
             setStats((prev) => {
               if (!prev) return prev;
               return {
@@ -174,7 +174,7 @@ export default function Home() {
         if (eventSource) {
           eventSource.close();
         }
-        // Attempt reconnect after 5s
+        // Попытка переподключения через 5 с
         reconnectTimer = setTimeout(connectSSE, 5000);
       };
     };
@@ -187,7 +187,7 @@ export default function Home() {
     };
   }, [isAuthenticated]);
 
-  // Simulate Attack Action
+  // Запуск имитации атаки
   const handleSimulateAttack = async () => {
     try {
       const res = await fetch('/api/control/simulate', {
@@ -196,14 +196,14 @@ export default function Home() {
         body: JSON.stringify({}),
       });
       if (res.ok) {
-        // Attack is broadcast via SSE automatically
+        // Событие атаки автоматически транслируется через SSE
       }
     } catch {
       console.error('Failed to trigger simulation');
     }
   };
 
-  // Clear Event Logs
+  // Очистка журнала событий
   const handleClearEvents = async () => {
     if (!confirm('Вы уверены, что хотите очистить журнал атак?')) return;
     try {
@@ -219,7 +219,7 @@ export default function Home() {
     try {
       await fetch('/api/control/auth', { method: 'DELETE' });
     } catch {
-      // ignore
+      // игнорируем ошибку
     }
     setIsAuthenticated(false);
     setSseStatus('disconnected');
@@ -233,10 +233,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Top Cyber Navigation Bar */}
+      {/* Верхняя навигационная панель */}
       <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo & Brand */}
+          {/* Логотип и бренд */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-black">
               <ShieldIcon className="w-5 h-5 text-slate-950" />
@@ -256,7 +256,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Center Navigation Tabs */}
+          {/* Центральные вкладки навигации */}
           <nav className="hidden md:flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
             <button
               onClick={() => setActiveTab('dashboard')}
@@ -304,9 +304,9 @@ export default function Home() {
             </button>
           </nav>
 
-          {/* Right System Indicators */}
+          {/* Правые системные индикаторы */}
           <div className="flex items-center gap-3">
-            {/* Live SSE Status */}
+            {/* Статус потока SSE в реальном времени */}
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono border ${
                 sseStatus === 'connected'
@@ -359,7 +359,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mobile Navigation Bar */}
+        {/* Панель навигации для мобильных устройств */}
         <div className="flex md:hidden border-t border-slate-800/80 px-2 py-1.5 justify-around bg-slate-900/60 text-xs">
           <button
             onClick={() => setActiveTab('dashboard')}
@@ -388,7 +388,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Основная область контента */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading || !stats ? (
           <div className="flex flex-col items-center justify-center h-80 space-y-4">
@@ -439,7 +439,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* Modals */}
+      {/* Модальные окна */}
       {deployModalNode !== undefined && (
         <DeployModal
           node={deployModalNode}
@@ -458,7 +458,7 @@ export default function Home() {
         <OperatorLoginModal onSuccess={handleLoginSuccess} />
       )}
 
-      {/* Footer */}
+      {/* Подвал страницы */}
       <footer className="border-t border-slate-800/80 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500 font-mono">
         Система защиты HoneyForge • Централизованное управление ловушками • Режимы MASK-2 / MASK-4 / MASK-5 активны
       </footer>

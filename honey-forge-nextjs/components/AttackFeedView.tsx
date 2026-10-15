@@ -88,7 +88,7 @@ export function AttackFeedView({
 
   return (
     <div className="space-y-6">
-      {/* Top Controls */}
+      {/* Верхние элементы управления */}
       <div className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export function AttackFeedView({
         </div>
 
         <div className="flex items-center flex-wrap gap-2">
-          {/* SSE Status Pill */}
+          {/* Индикатор статуса SSE */}
           <div
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border ${
               sseStatus === 'connected'
@@ -161,7 +161,7 @@ export function AttackFeedView({
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
+      {/* Панель фильтрации и поиска */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-96">
           <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -174,7 +174,7 @@ export function AttackFeedView({
           />
         </div>
 
-        {/* Severity Filter Pills */}
+        {/* Фильтры по уровню критичности */}
         <div className="flex items-center gap-1.5">
           {[
             { key: 'all', label: 'Все' },
@@ -198,7 +198,7 @@ export function AttackFeedView({
         </div>
       </div>
 
-      {/* Events Stream Table */}
+      {/* Таблица потока событий */}
       <div className="cyber-card rounded-xl border border-slate-800 bg-slate-900/80 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">

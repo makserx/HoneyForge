@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-HoneyForge Medium-Interaction Vulnerable HTTP Trap Server
-Simulates vulnerable web application with fake endpoints for:
+Среднеинтерактивный сервер-ловушка уязвимого HTTP HoneyForge.
+Имитирует уязвимое веб-приложение с ложными эндпоинтами для:
 - Apache Log4j (CVE-2021-44228)
 - Spring Cloud Gateway / Spring4Shell (CVE-2022-22947 / CVE-2022-22965)
-- phpMyAdmin / Webmin unauthenticated setup
-- Path traversal & /etc/passwd probes
-- WordPress xmlrpc.php & wp-login.php brute force
+- Неаутентифицированной установки phpMyAdmin / Webmin
+- Попыток обхода каталогов (Path traversal) и чтения /etc/passwd
+- Брутфорса учетных записей WordPress xmlrpc.php и wp-login.php
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -21,7 +21,7 @@ LOG_FILE = os.environ.get("TRAP_LOG_FILE", "")
 
 class TrapHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
-        # Suppress default server access logs to stdout to avoid clutter
+        # Подавление стандартных логов доступа сервера в stdout во избежание захламления вывода
         pass
 
     def do_GET(self):
@@ -42,7 +42,7 @@ class TrapHandler(BaseHTTPRequestHandler):
         path = self.path
         user_agent = self.headers.get("User-Agent", "")
 
-        # Check for specific signatures
+        # Проверка специфических сигнатур атак
         severity = "medium"
         event_type = "probe"
         matched = "Generic HTTP Probe"
@@ -101,7 +101,7 @@ class TrapHandler(BaseHTTPRequestHandler):
             except Exception as log_err:
                 print(f"[HTTP-TRAP] Warning writing to {LOG_FILE}: {log_err}", file=sys.stderr, flush=True)
 
-        # Emulate realistic server responses
+        # Эмуляция реалистичных ответов сервера
         if "phpmyadmin" in lower_path:
             self.send_response(200)
             self.send_header("Content-Type", "text/html")

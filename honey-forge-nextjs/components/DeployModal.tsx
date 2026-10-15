@@ -59,7 +59,7 @@ WantedBy=multi-user.target`;
           </button>
         </div>
 
-        {/* Stealth Security Note */}
+        {/* Примечание по безопасности и скрытности */}
         <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-600/40 text-xs text-amber-200/90 flex items-start gap-3">
           <ShieldIcon className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
           <div>
@@ -67,7 +67,7 @@ WantedBy=multi-user.target`;
           </div>
         </div>
 
-        {/* 1. Quick Launch Command */}
+        {/* 1. Команда быстрого запуска */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
             <span>Запуск через интерфейс командной строки (CLI)</span>
@@ -91,7 +91,7 @@ WantedBy=multi-user.target`;
           </div>
         </div>
 
-        {/* 2. Systemd Service Unit */}
+        {/* 2. Юнит службы Systemd */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
             <span>Служба автозапуска Linux Systemd (/etc/systemd/system/{maskName}.service)</span>

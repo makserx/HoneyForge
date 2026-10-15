@@ -1,5 +1,5 @@
 services:
-  # Low-Interaction Multi-Port Emulator (FTP, SSH, Telnet, HTTP, MySQL, Redis)
+  # Низкоинтерактивный мультипортовый эмулятор (FTP, SSH, Telnet, HTTP, MySQL, Redis)
   low-interaction-decoy:
     build:
       context: ./low-interaction
@@ -9,13 +9,13 @@ services:
     ports:
       - "21:21"
       - "23:23"
-      - "80:80"
+      - "8082:80"
       - "3306:3306"
       - "6379:6379"
     networks:
       - honeyforge-net
 
-  # Medium-Interaction Vulnerable HTTP Decoy (Log4j, Spring4Shell, phpMyAdmin)
+  # Среднеинтерактивная уязвимая HTTP-приманка (Log4j, Spring4Shell, phpMyAdmin)
   http-vulnerable-trap:
     build:
       context: ./medium-interaction/http-trap
@@ -32,7 +32,7 @@ services:
     networks:
       - honeyforge-net
 
-  # Medium-Interaction Cowrie SSH/Telnet Decoy (Interactive Shell & Keystroke Logger)
+  # Среднеинтерактивная приманка Cowrie SSH/Telnet (интерактивный шелл и кейлоггер)
   cowrie-ssh-trap:
     build:
       context: ./medium-interaction/cowrie
@@ -46,7 +46,7 @@ services:
     networks:
       - honeyforge-net
 
-  # Autonomous Forwarding Agent (MASK-4 / MASK-5)
+  # Автономный агент пересылки (MASK-4 / MASK-5)
   stealth-agent:
     build:
       context: ../agent

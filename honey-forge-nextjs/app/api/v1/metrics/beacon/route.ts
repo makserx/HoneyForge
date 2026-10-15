@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateNodeHeartbeat } from '@/lib/storage';
 import { BeaconPayload, BeaconResponse } from '@/lib/types';
 
-// Masquerade response headers to disguise control plane
+// Маскировочные заголовки ответа для скрытия control plane
 const DISGUISE_HEADERS = {
   'Server': 'nginx/1.24.0',
   'X-Telemetry-Ingest': 'v2.1-metrics-collector',
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Extract client IP if not provided in payload
+    // Извлечение IP клиента, если он не указан в полезной нагрузке
     const forwarded = req.headers.get('x-forwarded-for');
     const realIp = req.headers.get('x-real-ip');
     const clientIp = forwarded ? forwarded.split(',')[0].trim() : realIp || rawBody.ip || '127.0.0.1';

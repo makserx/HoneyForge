@@ -5,13 +5,13 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'honeyforge-secret-soc-2026';
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 1. Allow the authentication endpoint through
+  // 1. Пропускаем эндпоинт аутентификации
   if (pathname === '/api/control/auth') {
     return NextResponse.next();
   }
 
-  // 2. Protect operator control plane API routes (/api/control/*)
-  // Note: Agent telemetry (/api/v1/*) is excluded by matcher and untouched
+  // 2. Защита маршрутов API панели управления оператора (/api/control/*)
+  // Примечание: телеметрия агента (/api/v1/*) исключена правилом matcher и не затрагивается
   if (pathname.startsWith('/api/control')) {
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ')

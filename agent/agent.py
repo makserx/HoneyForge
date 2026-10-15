@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-HoneyForge Stealth Agent (agent.py)
-Autonomous lightweight honeypot sensor with process masking, network jitter,
-local SQLite buffering, and disguised telemetry transmission.
+Скрытый агент-сенсор HoneyForge (agent.py).
+Автономный легковесный сенсор honeypot с маскировкой процесса, сетевым джиттером,
+локальной буферизацией в SQLite и замаскированной передачей телеметрии.
 
-Requirements: Python 3.8+ (Zero external pip dependencies - Standard Library only)
+Требования: Python 3.8+ (без внешних зависимостей pip — только стандартная библиотека).
 """
 
 import os
@@ -26,14 +26,14 @@ import urllib.error
 import urllib.parse
 from datetime import datetime
 
-# Default configuration parameters (MASK-1: TLS encrypted control channel)
+# Параметры конфигурации по умолчанию (MASK-1: зашифрованный TLS-канал управления)
 DEFAULT_SERVER = "https://localhost:443"
 DEFAULT_MASK_NAME = "systemd-resolved"
 DEFAULT_BEACON_INTERVAL = 15
 DEFAULT_JITTER_PERCENT = 20
 DEFAULT_BUFFER_LIMIT = 5000
 
-# Setup basic logging
+# Базовая настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -43,15 +43,15 @@ logger = logging.getLogger("HoneyForgeAgent")
 
 
 class ProcessMasker:
-    """Masks process title and command line to prevent detection via ps/top/tasklist (MASK-4)."""
+    """Маскирует имя процесса и командную строку для предотвращения обнаружения через ps/top/tasklist (MASK-4)."""
 
     @staticmethod
     def apply_mask(name: str):
         try:
-            # 1. Modify sys.argv[0]
+            # 1. Модификация sys.argv[0]
             sys.argv[0] = f"[{name}]"
 
-            # 2. Linux prctl process name change
+            # 2. Смена имени процесса Linux через prctl
             if platform.system() == "Linux":
                 try:
                     import ctypes
@@ -64,7 +64,7 @@ class ProcessMasker:
                 except Exception as e:
                     logger.debug(f"[MASK-4] prctl call skipped: {e}")
 
-            # 3. Optional setproctitle if installed
+            # 3. Опциональный setproctitle, если пакет установлен
             try:
                 import setproctitle
                 setproctitle.setproctitle(f"[{name}]")
@@ -77,7 +77,7 @@ class ProcessMasker:
 
 
 class LocalBuffer:
-    """Stores and buffers attack events locally in SQLite when offline (FR-A4)."""
+    """Сохраняет и буферизует события атак локально в SQLite при отсутствии связи (FR-A4)."""
 
     def __init__(self, db_path: str = "agent_buffer.db"):
         self.db_path = db_path
@@ -172,7 +172,7 @@ class LocalBuffer:
                 f"UPDATE events_buffer SET synced = 1 WHERE id IN ({placeholders})",
                 ids,
             )
-            # Prune old synced events exceeding 5000 records
+            # Очистка старых синхронизированных событий сверх лимита записей
             cursor.execute("DELETE FROM events_buffer WHERE synced = 1 AND id NOT IN (SELECT id FROM events_buffer ORDER BY timestamp DESC LIMIT 2000)")
             conn.commit()
 
@@ -185,7 +185,7 @@ class LocalBuffer:
 
 
 class DecoyListener:
-    """Built-in low-interaction socket listener for port and banner emulation."""
+    """Встроенный низкоинтерактивный сокет-слушатель для эмуляции портов и баннеров."""
 
     def __init__(self, port: int, service_name: str, banner: str, on_event_callback):
         self.port = port
@@ -241,14 +241,14 @@ class DecoyListener:
         try:
             client_sock.settimeout(5.0)
 
-            # Send banner if configured
+            # Отправка баннера, если он настроен
             if self.banner:
                 banner_payload = self.banner.replace("\\n", "\n").replace("\\r", "\r")
                 if not banner_payload.endswith("\n"):
                     banner_payload += "\r\n"
                 client_sock.sendall(banner_payload.encode("utf-8", errors="ignore"))
 
-            # Capture initial attacker payload (up to 2KB)
+            # Захват начальной полезной нагрузки атакующего (до 2 КБ)
             received = b""
             try:
                 received = client_sock.recv(2048)
@@ -257,12 +257,12 @@ class DecoyListener:
 
             raw_str = received.decode("utf-8", errors="replace").strip()
 
-            # Classify event severity & type based on payload
+            # Классификация важности и типа события на основе полезной нагрузки
             event_type = "probe"
             severity = "low"
             details = {"rawData": raw_str[:500]}
 
-            # Analyze payload
+            # Анализ полезной нагрузки
             lower_str = raw_str.lower()
             if "root" in lower_str or "admin" in lower_str or "pass" in lower_str or "login" in lower_str:
                 event_type = "auth_attempt"
@@ -303,7 +303,7 @@ class DecoyListener:
 
             self.on_event(event)
 
-            # Close gracefully
+            # Корректное закрытие сокета
             time.sleep(0.5)
             client_sock.close()
         except Exception as e:
@@ -316,7 +316,7 @@ class DecoyListener:
 
 
 class CowrieLogTailer:
-    """Tails Cowrie honeypot cowrie.json log, extracts IOCs, and submits to agent buffer."""
+    """Отслеживает лог Cowrie honeypot cowrie.json, извлекает IOC и помещает их в буфер агента."""
 
     def __init__(self, log_path: str, on_event_callback):
         self.log_path = log_path
@@ -460,7 +460,7 @@ class CowrieLogTailer:
 
 
 class GenericJsonLogTailer:
-    """Tails generic HoneyForge JSON log files (e.g. HTTP trap, emulator)."""
+    """Отслеживает стандартные JSON-файлы логов HoneyForge (например, HTTP-ловушки, эмулятора)."""
 
     def __init__(self, log_path: str, honeypot_type: str, on_event_callback):
         self.log_path = log_path
@@ -530,7 +530,7 @@ class GenericJsonLogTailer:
 
 
 class HoneyForgeAgent:
-    """Autonomous agent coordinating beacon, buffer, listeners, and config sync."""
+    """Автономный агент, координирующий маяк, буфер, слушатели и синхронизацию конфигурации."""
 
     def __init__(
         self,
@@ -563,23 +563,23 @@ class HoneyForgeAgent:
         self.beacon_interval = DEFAULT_BEACON_INTERVAL
         self.jitter_percent = DEFAULT_JITTER_PERCENT
 
-        # Endpoints disguised as regular web resources (MASK-2)
+        # Эндпоинты, замаскированные под стандартные веб-ресурсы (MASK-2)
         self.beacon_url = f"{self.server_url}/api/v1/metrics/beacon"
         self.log_url = f"{self.server_url}/api/v1/assets/log"
         self.manifest_url = f"{self.server_url}/api/v1/assets/manifest"
 
-        # Initialize SSL/TLS context for secure telemetry (MASK-1)
+        # Инициализация контекста SSL/TLS для безопасной передачи телеметрии (MASK-1)
         self.ssl_context = self._create_ssl_context()
 
     def _create_ssl_context(self):
-        """Configures SSL/TLS context with custom CA support and permissive fallback (MASK-1)."""
+        """Настраивает контекст SSL/TLS с поддержкой пользовательских CA и резервным мягким режимом (MASK-1)."""
         if not self.server_url.lower().startswith("https://"):
             return None
 
         try:
             ctx = ssl.create_default_context()
 
-            # Locate CA certificate if supplied or exists in common directories
+            # Поиск CA-сертификата, если он передан или существует в стандартных каталогах
             ca_candidate = self.ca_cert_path
             if not ca_candidate:
                 for candidate in ["/certs/server.crt", "certs/server.crt", "../certs/server.crt"]:
@@ -607,7 +607,7 @@ class HoneyForgeAgent:
             return ssl._create_unverified_context()
 
     def _urlopen_kwargs(self, timeout: float = 10.0) -> dict:
-        """Helper returning keyword arguments for urllib.request.urlopen."""
+        """Вспомогательная функция, возвращающая именованные аргументы для urllib.request.urlopen."""
         kwargs = {"timeout": timeout}
         if self.ssl_context is not None and self.server_url.lower().startswith("https://"):
             kwargs["context"] = self.ssl_context
@@ -632,10 +632,10 @@ class HoneyForgeAgent:
         logger.info(f"[*] Starting HoneyForge Stealth Agent [ID: {self.agent_id}]")
         logger.info(f"[*] Target Control Server: {self.server_url} [{enc_info}]")
 
-        # Apply process title mask (MASK-4)
+        # Применение маскировки имени процесса (MASK-4)
         ProcessMasker.apply_mask(self.mask_name)
 
-        # Start log tailers if configured
+        # Запуск модулей отслеживания логов, если они настроены
         if self.cowrie_log_path:
             tailer = CowrieLogTailer(self.cowrie_log_path, self.on_attack_detected)
             tailer.start()
@@ -646,18 +646,18 @@ class HoneyForgeAgent:
             tailer.start()
             self.tailers.append(tailer)
 
-        # Initial config pull
+        # Первоначальное получение конфигурации
         self.fetch_initial_config()
 
-        # Start background event draining loop
+        # Запуск фонового цикла выгрузки событий
         drain_thread = threading.Thread(target=self._drain_loop, daemon=True)
         drain_thread.start()
 
-        # Main heartbeat loop with jitter (MASK-5)
+        # Основной цикл отправки сигналов маяка с джиттером (MASK-5)
         self._beacon_loop()
 
     def fetch_initial_config(self):
-        """Pull initial configuration profile from disguised manifest endpoint (FR-A3)."""
+        """Получение начального профиля конфигурации из замаскированного эндпоинта манифеста (FR-A3)."""
         try:
             url = f"{self.manifest_url}?nid={self.agent_id}"
             req = urllib.request.Request(
@@ -676,12 +676,12 @@ class HoneyForgeAgent:
             self._start_default_listeners()
 
     def apply_profile(self, profile: dict, config_hash: str):
-        """Dynamically reconfigures open ports and banners according to server profile."""
+        """Динамически перенастраивает открытые порты и баннеры согласно профилю с сервера."""
         logger.info(f"[+] Applying profile: '{profile.get('name')}' (Level: {profile.get('interactionLevel')})")
         self.current_profile = profile
         self.current_config_hash = config_hash
 
-        # Update stealth settings
+        # Обновление настроек скрытности
         agent_cfg = profile.get("agentConfig", {})
         self.beacon_interval = agent_cfg.get("beaconIntervalSeconds", self.beacon_interval)
         self.jitter_percent = agent_cfg.get("jitterPercent", self.jitter_percent)
@@ -691,12 +691,12 @@ class HoneyForgeAgent:
             self.mask_name = new_mask
             ProcessMasker.apply_mask(new_mask)
 
-        # Stop old listeners
+        # Остановка старых слушателей
         for listener in self.active_listeners:
             listener.stop()
         self.active_listeners.clear()
 
-        # Start new services
+        # Запуск новых служб
         services = profile.get("services", [])
         for srv in services:
             if srv.get("enabled", True):
@@ -710,7 +710,7 @@ class HoneyForgeAgent:
                 self.active_listeners.append(listener)
 
     def _start_default_listeners(self):
-        """Fallback emulator if control server is momentarily unreachable."""
+        """Резервный эмулятор на случай временной недоступности сервера управления."""
         default_services = [
             {"port": 2222, "service": "SSH-Fallback", "banner": "SSH-2.0-OpenSSH_8.4p1"},
             {"port": 8080, "service": "HTTP-Fallback", "banner": "Apache/2.4.51 (Debian)"},
@@ -726,16 +726,16 @@ class HoneyForgeAgent:
             self.active_listeners.append(listener)
 
     def on_attack_detected(self, event: dict):
-        """Callback when an attack or port scan hits one of our listeners."""
+        """Функция обратного вызова при фиксации атаки или сканирования портов одним из слушателей."""
         logger.info(
             f"[!] Threat captured from {event.get('source_ip')} -> Port {event.get('dest_port')} "
             f"({event.get('severity').upper()}: {event.get('event_type')})"
         )
-        # 1. Immediately store into local SQLite buffer (FR-A4)
+        # 1. Немедленное сохранение в локальный буфер SQLite (FR-A4)
         self.buffer.insert_event(event)
 
     def _drain_loop(self):
-        """Periodically flushes buffered events from SQLite to disguised log API."""
+        """Периодически выгружает буферизованные события из SQLite в замаскированный API логов."""
         while self.running:
             self._interruptible_sleep(5.0)
             if not self.running:
@@ -771,9 +771,9 @@ class HoneyForgeAgent:
                 logger.debug(f"[-] Offline or log ingest temporarily unavailable ({err}). Events buffered in SQLite.")
 
     def _beacon_loop(self):
-        """Sends disguised heartbeats with random jitter (MASK-2, MASK-5)."""
+        """Отправляет замаскированные сигналы маяка со случайным джиттером (MASK-2, MASK-5)."""
         while self.running:
-            # Calculate sleep interval with jitter
+            # Расчет интервала ожидания с учетом джиттера
             jitter_range = self.beacon_interval * (self.jitter_percent / 100.0)
             actual_sleep = self.beacon_interval + random.uniform(-jitter_range, jitter_range)
             actual_sleep = max(3.0, actual_sleep)
@@ -810,7 +810,7 @@ class HoneyForgeAgent:
                 with urllib.request.urlopen(req, **self._urlopen_kwargs(10)) as resp:
                     if resp.status == 200:
                         res_data = json.loads(resp.read().decode("utf-8"))
-                        # Check if server pushed an updated profile
+                        # Проверка, передал ли сервер обновленный профиль
                         if res_data.get("config_update") and res_data.get("profile"):
                             logger.info("[*] Server dispatched new profile update!")
                             new_hash = hashlib.md5(

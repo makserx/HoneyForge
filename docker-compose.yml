@@ -1,13 +1,13 @@
 services:
-  # 1. HoneyForge Control Plane (Web UI & Masked Control API)
+  # 1. Панель управления HoneyForge (веб-интерфейс и замаскированный Control API)
   control-server:
     build:
       context: ./honey-forge-nextjs
       dockerfile: Dockerfile
     container_name: honeyforge-control-server
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - ADMIN_TOKEN=honeyforge-secret-soc-2026
     volumes:
@@ -15,7 +15,7 @@ services:
     networks:
       - mgmt_net
 
-  # 2. Nginx TLS Reverse-Proxy & Camouflage Gateway (MASK-1, MASK-2)
+  # 2. TLS Reverse-Proxy Nginx и шлюз маскировки (MASK-1, MASK-2)
   nginx:
     image: nginx:1.24-alpine
     container_name: honeyforge-nginx-proxy
@@ -34,7 +34,7 @@ services:
           - nginx
           - control-server-tls
 
-  # 3. Low-Interaction Multi-Port Banner Emulator
+  # 3. Низкоинтерактивный мультипортовый эмулятор баннеров
   low-interaction-decoy:
     build:
       context: ./honeypots/low-interaction
@@ -50,7 +50,7 @@ services:
     networks:
       - decoy_net
 
-  # 4. Medium-Interaction Vulnerable HTTP Decoy (Log4j, Spring4Shell, phpMyAdmin)
+  # 4. Среднеинтерактивная уязвимая HTTP-приманка (Log4j, Spring4Shell, phpMyAdmin)
   http-vulnerable-trap:
     build:
       context: ./honeypots/medium-interaction/http-trap
@@ -67,7 +67,7 @@ services:
     networks:
       - decoy_net
 
-  # 5. Medium-Interaction Cowrie SSH/Telnet Trap
+  # 5. Среднеинтерактивная ловушка Cowrie SSH/Telnet
   cowrie-ssh-trap:
     build:
       context: ./honeypots/medium-interaction/cowrie
@@ -81,7 +81,7 @@ services:
     networks:
       - decoy_net
 
-  # 6. Stealth Honeypot Forwarding Agent (MASK-1, MASK-4, MASK-5)
+  # 6. Скрытый агент пересылки honeypot (MASK-1, MASK-4, MASK-5)
   stealth-agent:
     build:
       context: ./agent
@@ -115,9 +115,9 @@ volumes:
   trap-logs:
 
 networks:
-  # Isolated Decoy Perimeter - attackers & honeypots only
+  # Изолированный периметр приманок — только для атакующих и ловушек
   decoy_net:
     driver: bridge
-  # Protected Management Plane - control server, nginx TLS proxy & agent link only
+  # Защищенный контур управления — только для сервера управления, TLS-прокси Nginx и канала агента
   mgmt_net:
     driver: bridge

@@ -6,14 +6,14 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
-      // 1. Send initial connected greeting
+      // 1. Отправка начального приветствия при подключении
       const initMessage = `data: ${JSON.stringify({
         type: 'connected',
         timestamp: new Date().toISOString(),
       })}\n\n`;
       controller.enqueue(encoder.encode(initMessage));
 
-      // 2. Subscribe to real-time events bus
+      // 2. Подписка на шину событий реального времени
       const unsubscribe = eventEmitter.subscribe((payload: SSEPayload) => {
         try {
           const chunk = `data: ${JSON.stringify(payload)}\n\n`;
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         }
       });
 
-      // 3. Heartbeat keepalive ping every 15 seconds to prevent browser/proxy timeouts
+      // 3. Keepalive-пинг каждые 15 секунд для предотвращения таймаутов браузера/прокси
       const keepaliveInterval = setInterval(() => {
         try {
           const pingChunk = `data: ${JSON.stringify({
@@ -36,14 +36,14 @@ export async function GET(req: NextRequest) {
         }
       }, 15000);
 
-      // 4. Handle client disconnection
+      // 4. Обработка отключения клиента
       req.signal.addEventListener('abort', () => {
         unsubscribe();
         clearInterval(keepaliveInterval);
         try {
           controller.close();
         } catch {
-          // Stream might already be closed
+          // Поток уже может быть закрыт
         }
       });
     },
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no', // Disable buffering for Nginx reverse proxies
+      'X-Accel-Buffering': 'no', // Отключение буферизации для reverse-proxy Nginx
     },
   });
 }

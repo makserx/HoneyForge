@@ -15,7 +15,7 @@ export function EventDetailModal({ event, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
       <div className="cyber-card p-6 rounded-2xl border border-slate-700 bg-slate-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-5">
-        {/* Header */}
+        {/* Заголовок */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2.5">
             <AlertTriangleIcon
@@ -44,7 +44,7 @@ export function EventDetailModal({ event, onClose }: Props) {
           </button>
         </div>
 
-        {/* Threat Actor & Target Summary */}
+        {/* Сводка об источнике угрозы и цели */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -74,7 +74,7 @@ export function EventDetailModal({ event, onClose }: Props) {
           </div>
         </div>
 
-        {/* IOC & Payload Details */}
+        {/* Детали индикаторов компрометации (IOC) и полезной нагрузки */}
         <div className="space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
             Индикаторы компрометации (IOC) и данные эксплойта
@@ -131,7 +131,7 @@ export function EventDetailModal({ event, onClose }: Props) {
           )}
         </div>
 
-        {/* Raw Event JSON */}
+        {/* Исходные данные события в формате JSON */}
         <details className="text-xs group">
           <summary className="text-slate-400 hover:text-slate-200 cursor-pointer font-semibold py-1">
             Сырые данные события в формате JSON ▸

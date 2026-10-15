@@ -21,9 +21,9 @@ export interface HoneypotService {
 
 export interface AgentStealthConfig {
   beaconIntervalSeconds: number;
-  jitterPercent: number; // e.g. 20 means +/- 20%
-  maskProcessName: string; // e.g. "systemd-resolved" or "[kworker/u2:0]"
-  bufferLimit: number; // max events in SQLite buffer
+  jitterPercent: number; // например, 20 означает +/- 20%
+  maskProcessName: string; // например, "systemd-resolved" или "[kworker/u2:0]"
+  bufferLimit: number; // макс. число событий в SQLite-буфере
   logRotationMb: number;
 }
 
@@ -94,7 +94,7 @@ export interface AttackEvent {
   sourceIp: string;
   sourcePort: number;
   destPort: number;
-  protocol: string; // TCP, UDP, HTTP, SSH, etc.
+  protocol: string; // TCP, UDP, HTTP, SSH и т. д.
   honeypotType: string;
   eventType: EventType;
   severity: EventSeverity;

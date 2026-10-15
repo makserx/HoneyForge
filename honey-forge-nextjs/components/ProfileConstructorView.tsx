@@ -111,7 +111,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
 
   const initialProfile = profiles.find((x) => x.id === selectedId) || profiles[0];
 
-  // Form state
+  // Состояние формы
   const [name, setName] = useState(initialProfile?.name || '');
   const [description, setDescription] = useState(initialProfile?.description || '');
   const [interactionLevel, setInteractionLevel] = useState<InteractionLevel>(initialProfile?.interactionLevel || 'low');
@@ -150,7 +150,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
     }
   }
 
-  // When profile is selected, populate form
+  // При выборе профиля заполняем форму
   const handleSelectProfile = (p: HoneypotProfile) => {
     setSelectedId(p.id);
     setIsCreatingNew(false);
@@ -208,7 +208,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
     setTimeout(() => setFeedbackMsg(null), 4000);
   };
 
-  // Service list manipulations
+  // Операции со списком служб
   const toggleService = (idx: number) => {
     const updated = [...services];
     updated[idx].enabled = !updated[idx].enabled;
@@ -244,7 +244,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
     setNewPortBanner('');
   };
 
-  // Decoy credentials manipulations
+  // Операции с учетными данными-приманками
   const removeCredential = (idx: number) => {
     setDecoyCredentials(decoyCredentials.filter((_, i) => i !== idx));
   };
@@ -267,7 +267,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
     setNewCredRole('');
   };
 
-  // Save profile to API
+  // Сохранение профиля через API
   const handleSave = async () => {
     if (!name.trim()) {
       showNotice('Укажите название профиля', 'error');
@@ -349,7 +349,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & Presets */}
+      {/* Верхний баннер и шаблоны */}
       <div className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
         </div>
       )}
 
-      {/* Preset Fast Selector */}
+      {/* Быстрый выбор шаблонов */}
       <div className="cyber-card p-4 rounded-xl border border-slate-800/80 bg-slate-900/40">
         <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
           <ZapIcon className="w-3.5 h-3.5 text-amber-400" />
@@ -410,7 +410,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Existing Profiles List */}
+        {/* Левая колонка: список существующих профилей */}
         <div className="lg:col-span-4 space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-1">
             Зарегистрированные профили ({profiles.length})
@@ -459,7 +459,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
           </div>
         </div>
 
-        {/* Right Column: Visual Constructor & Configuration Editor */}
+        {/* Правая колонка: визуальный конструктор и редактор конфигурации */}
         <div className="lg:col-span-8 cyber-card p-6 rounded-xl border border-slate-800 bg-slate-900/80 space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-slate-800">
             <div>
@@ -490,7 +490,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
             </div>
           </div>
 
-          {/* Basic Info */}
+          {/* Основная информация */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wide">
@@ -532,7 +532,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
             </div>
           </div>
 
-          {/* Emulated Ports & Services */}
+          {/* Эмулируемые порты и службы */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
@@ -591,7 +591,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
               ))}
             </div>
 
-            {/* Add New Service Port */}
+            {/* Добавление нового порта службы */}
             <div className="mt-3 p-3 rounded-lg bg-slate-950/40 border border-dashed border-slate-800 flex flex-col sm:flex-row items-center gap-2">
               <input
                 type="number"
@@ -624,7 +624,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
             </div>
           </div>
 
-          {/* Decoy Credentials (FR-C1, Honey-Tokens) */}
+          {/* Учётные данные-приманки (FR-C1, Honey-Tokens) */}
           <div className="pt-4 border-t border-slate-800">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -677,7 +677,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
               </div>
             )}
 
-            {/* Add New Credential Form */}
+            {/* Форма добавления новых учетных данных */}
             <div className="mt-3 p-3 rounded-lg bg-slate-950/40 border border-dashed border-slate-800 flex flex-col sm:flex-row items-center gap-2">
               <input
                 type="text"
@@ -710,7 +710,7 @@ export function ProfileConstructorView({ profiles, onRefresh }: Props) {
             </div>
           </div>
 
-          {/* Stealth & Agent Configuration (MASK-4, MASK-5, FR-A3) */}
+          {/* Параметры скрытности и конфигурация агента (MASK-4, MASK-5, FR-A3) */}
           <div className="pt-4 border-t border-slate-800">
             <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <ZapIcon className="w-4 h-4" />

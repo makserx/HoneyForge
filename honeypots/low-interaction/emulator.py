@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-HoneyForge Low-Interaction Multi-Port Banner Emulator
-Listens on multiple TCP ports, outputs realistic banners, and logs attempts.
+Низкоинтерактивный мультипортовый эмулятор баннеров HoneyForge.
+Прослушивает несколько TCP-портов, выдает реалистичные баннеры и логирует попытки подключения.
 """
 
 import socket

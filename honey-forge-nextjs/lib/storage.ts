@@ -20,7 +20,7 @@ interface DatabaseSchema {
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'honeyforge_db.json');
 
-// In-memory cache for fast Next.js SSR / API calls with background persistence
+// Кэш в оперативной памяти для быстрых вызовов Next.js SSR / API с фоновым сохранением
 let cachedDb: DatabaseSchema | null = null;
 let writeTimeout: NodeJS.Timeout | null = null;
 
@@ -423,7 +423,7 @@ function scheduleSave(): void {
 }
 
 // -------------------------------------------------------------
-// PROFILE OPERATIONS (FR-C1)
+// ОПЕРАЦИИ С ПРОФИЛЯМИ (FR-C1)
 // -------------------------------------------------------------
 
 export function getProfiles(): HoneypotProfile[] {
@@ -465,7 +465,7 @@ export function updateProfile(
   };
   db.profiles[index] = updated;
 
-  // Also update profileName for attached nodes
+  // Также обновляем profileName для привязанных нод
   db.nodes.forEach((n) => {
     if (n.profileId === id) {
       n.profileName = updated.name;
@@ -488,14 +488,14 @@ export function deleteProfile(id: string): boolean {
 }
 
 // -------------------------------------------------------------
-// NODE OPERATIONS (FR-C2)
+// ОПЕРАЦИИ С НОДАМИ (FR-C2)
 // -------------------------------------------------------------
 
 export function getNodes(): HoneypotNode[] {
   const db = getDb();
   const now = Date.now();
 
-  // Dynamically recalculate online / offline / degraded status based on lastSeen
+  // Динамический пересчет статуса online / offline / degraded на основе lastSeen
   db.nodes.forEach((node) => {
     const diffSec = (now - new Date(node.lastSeen).getTime()) / 1000;
     const interval = node.jitterSeconds || 15;
@@ -611,7 +611,7 @@ export function updateNodeHeartbeat(payload: BeaconPayload): {
     }
   }
 
-  // Check config hash to see if agent needs profile update
+  // Проверка хэша конфигурации: требуется ли агенту обновление профиля
   const assignedProfile = db.profiles.find((p) => p.id === node.profileId) || db.profiles[0];
   const profileHash = crypto
     .createHash('md5')
@@ -660,7 +660,7 @@ export function assignProfileToNode(nodeId: string, profileId: string): Honeypot
 }
 
 // -------------------------------------------------------------
-// EVENT OPERATIONS (FR-C4, FR-C5)
+// ОПЕРАЦИИ С СОБЫТИЯМИ (FR-C4, FR-C5)
 // -------------------------------------------------------------
 
 export function getEvents(filter?: {
@@ -676,7 +676,7 @@ export function getEvents(filter?: {
   const db = getDb();
   let list = [...db.events];
 
-  // Sort newest first
+  // Сортировка: сначала новые
   list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   if (filter?.severity && filter.severity !== 'all') {
@@ -747,7 +747,7 @@ export function recordEvents(
     db.events.unshift(event);
     savedList.push(event);
 
-    // Update node event counters
+    // Обновление счетчиков событий ноды
     const node = db.nodes.find((n) => n.id === event.agentId);
     if (node) {
       node.stats.totalEvents += 1;
@@ -755,14 +755,14 @@ export function recordEvents(
     }
   }
 
-  // Keep max 20,000 events in MVP storage to prevent memory overflow
+  // Хранение максимум 20 000 событий в хранилище MVP для предотвращения переполнения памяти
   if (db.events.length > 20000) {
     db.events = db.events.slice(0, 20000);
   }
 
   scheduleSave();
 
-  // Broadcast to live SSE subscribers
+  // Рассылка активным подписчикам SSE
   if (savedList.length === 1) {
     eventEmitter.emit({ type: 'attack_event', data: savedList[0] });
   } else if (savedList.length > 1) {
@@ -779,7 +779,7 @@ export function clearEvents(): void {
 }
 
 // -------------------------------------------------------------
-// SYSTEM STATS & METRICS
+// СИСТЕМНАЯ СТАТИСТИКА И МЕТРИКИ
 // -------------------------------------------------------------
 
 export function getStats(): SystemStats {
@@ -795,7 +795,7 @@ export function getStats(): SystemStats {
 
   const criticalEvents = db.events.filter((e) => e.severity === 'critical').length;
 
-  // Protocol aggregation
+  // Агрегация по протоколам
   const protoMap: Record<string, number> = {};
   db.events.forEach((e) => {
     const p = (e.protocol || 'OTHER').toUpperCase();
@@ -806,7 +806,7 @@ export function getStats(): SystemStats {
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
 
-  // Top Attacker IPs
+  // Топ IP-адресов атакующих
   const ipMap: Record<string, { count: number; country?: string }> = {};
   db.events.forEach((e) => {
     if (!ipMap[e.sourceIp]) {
@@ -819,7 +819,7 @@ export function getStats(): SystemStats {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  // Hourly velocity for last 12 buckets
+  // Почасовая динамика за последние 12 интервалов
   const recentVelocity: Array<{ time: string; count: number }> = [];
   for (let i = 11; i >= 0; i--) {
     const startHour = Date.now() - (i + 1) * 3600000;

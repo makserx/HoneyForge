@@ -1,5 +1,5 @@
 {
-  "server_url": "http://localhost:3000",
+  "server_url": "https://localhost:443",
   "agent_id": "node_dmz_edge_01",
   "mask_process_name": "systemd-resolved",
   "beacon_interval_seconds": 15,

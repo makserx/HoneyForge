@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!profile) {
-      // Default fallback profile
+      // Профиль по умолчанию (fallback)
       const all = getProfiles();
       profile = all[0];
     }

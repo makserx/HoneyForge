@@ -18,7 +18,7 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
 
-/* Custom Cyber Scrollbar */
+/* Кастомный кибер-скроллбар */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -34,7 +34,7 @@ body {
   background: #334155;
 }
 
-/* Radar & Pulse Animations */
+/* Анимации радара и пульсации */
 @keyframes radar-sweep {
   0% {
     transform: rotate(0deg);
@@ -63,7 +63,7 @@ body {
   animation: radar-sweep 4s linear infinite;
 }
 
-/* Glassmorphism utility */
+/* Стили глассморфизма */
 .cyber-card {
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(12px);

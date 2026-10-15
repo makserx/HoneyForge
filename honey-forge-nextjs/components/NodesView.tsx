@@ -93,7 +93,7 @@ export function NodesView({
 
   return (
     <div className="space-y-6">
-      {/* Header bar */}
+      {/* Панель заголовка */}
       <div className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export function NodesView({
         </div>
       )}
 
-      {/* Search and Stats Summary */}
+      {/* Поиск и сводка статистики */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
           <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -150,7 +150,7 @@ export function NodesView({
         </div>
       </div>
 
-      {/* Nodes Table */}
+      {/* Таблица нод */}
       <div className="cyber-card rounded-xl border border-slate-800 bg-slate-900/80 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -296,7 +296,7 @@ export function NodesView({
         </div>
       </div>
 
-      {/* Change Profile Modal */}
+      {/* Модальное окно смены профиля */}
       {selectedNodeForProfile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="cyber-card p-6 rounded-xl border border-slate-700 bg-slate-900 w-full max-w-md space-y-4">

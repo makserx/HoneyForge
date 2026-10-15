@@ -32,7 +32,7 @@ export function DashboardView({
 
   return (
     <div className="space-y-6">
-      {/* Top Threat Banner */}
+      {/* Верхний баннер угроз */}
       <div className="cyber-card p-6 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/20 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-96 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
 
@@ -73,9 +73,9 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* 4 KPI Metrics Cards */}
+      {/* Карточки 4 ключевых метрик KPI */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Active Nodes */}
+        {/* Активные ноды */}
         <div
           onClick={() => onNavigateToTab('nodes')}
           className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/70 hover:border-amber-500/40 transition-all cursor-pointer group"
@@ -98,7 +98,7 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Total Attacks Intercepted */}
+        {/* Всего перехвачено атак */}
         <div
           onClick={() => onNavigateToTab('feed')}
           className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/70 hover:border-amber-500/40 transition-all cursor-pointer group"
@@ -117,7 +117,7 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Critical Exploits */}
+        {/* Критические эксплойты */}
         <div
           onClick={() => onNavigateToTab('feed')}
           className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/70 hover:border-rose-500/40 transition-all cursor-pointer group"
@@ -137,7 +137,7 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Stealth & Jitter Protocol */}
+        {/* Протокол маскировки и джиттера */}
         <div
           onClick={() => onNavigateToTab('profiles')}
           className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/70 hover:border-amber-500/40 transition-all cursor-pointer group"
@@ -157,9 +157,9 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* Main Grid: Attack Velocity Graph & Protocol Breakdown */}
+      {/* Основная сетка: график динамики атак и распределение по протоколам */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Attack Velocity Timeline */}
+        {/* Левая колонка: временная шкала динамики атак */}
         <div className="lg:col-span-8 cyber-card p-6 rounded-xl border border-slate-800 bg-slate-900/80 space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -176,7 +176,7 @@ export function DashboardView({
             </span>
           </div>
 
-          {/* Bar Chart Visualization */}
+          {/* Столбчатая диаграмма */}
           <div className="h-44 flex items-end gap-2 pt-6 pb-2 px-2 border-b border-slate-800/80">
             {stats.recentVelocity.map((bucket, idx) => {
               const heightPercent = Math.max(
@@ -203,7 +203,7 @@ export function DashboardView({
             })}
           </div>
 
-          {/* Recent Attacks Preview Table */}
+          {/* Таблица последних перехваченных атак */}
           <div className="pt-2">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -249,9 +249,9 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Right Column: Protocols & Top Threat Actors */}
+        {/* Правая колонка: протоколы и основные источники угроз */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Targeted Protocols */}
+          {/* Атакуемые протоколы */}
           <div className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/80 space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
               Популярные протоколы и порты атак
@@ -278,7 +278,7 @@ export function DashboardView({
             </div>
           </div>
 
-          {/* Top Threat Actors / IPs */}
+          {/* Топ атакующих IP / субъектов угроз */}
           <div className="cyber-card p-5 rounded-xl border border-slate-800 bg-slate-900/80 space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
               Топ IP-адресов атакующих

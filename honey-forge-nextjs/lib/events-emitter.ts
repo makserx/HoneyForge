@@ -34,7 +34,7 @@ class GlobalEventEmitter {
   }
 }
 
-// In Next.js dev & edge/server environments, attach to globalThis to prevent reload wipes
+// В средах Next.js dev и edge/server привязываем к globalThis во избежание сброса при перезагрузке
 const globalWithEmitter = globalThis as unknown as {
   __honeyforgeEmitter?: GlobalEventEmitter;
 };

@@ -51,7 +51,7 @@ export function OperatorLoginModal({ onSuccess }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
       <div className="w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header Banner */}
+        {/* Баннер заголовка */}
         <div className="p-6 border-b border-slate-800 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-900">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
@@ -73,7 +73,7 @@ export function OperatorLoginModal({ onSuccess }: Props) {
           </div>
         </div>
 
-        {/* Form Body */}
+        {/* Тело формы */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wide">
@@ -101,7 +101,7 @@ export function OperatorLoginModal({ onSuccess }: Props) {
             </div>
           )}
 
-          {/* Quick fill preset for development / demo */}
+          {/* Быстрая вставка пресета для разработки / демонстрации */}
           <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 text-xs text-slate-400 flex items-center justify-between gap-2">
             <div>
               <span className="text-slate-300 font-medium">Демо-токен:</span>{' '}
@@ -132,7 +132,7 @@ export function OperatorLoginModal({ onSuccess }: Props) {
           </div>
         </form>
 
-        {/* Footer info */}
+        {/* Информация в подвале */}
         <div className="px-6 py-3 bg-slate-950/40 border-t border-slate-800/80 text-[11px] text-slate-500 text-center font-mono">
           Сессия оператора сохраняется в cookie <span className="text-slate-400">hf_session</span>
         </div>

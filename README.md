@@ -98,8 +98,7 @@ docker compose up -d --build
 ```
 
 После старта:
-- **Защищённый Web UI & Control API (TLS/HTTPS, MASK-1)**: [https://localhost:443](https://localhost:443) (или [http://localhost](http://localhost) с авто-редиректом на HTTPS)
-- **Прямой порт бэкенда (Debug)**: [http://localhost:3000](http://localhost:3000)
+- **Защищённый Web UI & Control API (TLS/HTTPS, MASK-1)**: [https://localhost:443](https://localhost:443) (или [http://localhost](http://localhost) с авто-редиректом 301 на HTTPS). Порт 3000 изолирован внутри Docker-сети для исключения открытого HTTP-трафика.
 - **Vulnerable HTTP Trap**: [http://localhost:8081](http://localhost:8081)
 - **Cowrie SSH Trap**: `ssh root@localhost -p 2222`
 - **Low-Interaction Decoy**: Порты 2121, 2323, 8082, 3307, 6380
@@ -134,7 +133,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/python3 /opt/honeyforge/agent.py --server "http://<CONTROL_IP>:3000" --id "node_prod_dmz" --mask "systemd-resolved"
+ExecStart=/usr/bin/python3 /opt/honeyforge/agent.py --server "https://<CONTROL_IP>:443" --id "node_prod_dmz" --mask "systemd-resolved" --ca-cert "/opt/honeyforge/server.crt"
 Restart=always
 RestartSec=10
 StandardOutput=null

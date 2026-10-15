@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# HoneyForge TLS Certificate Generator (MASK-1)
-# Generates self-signed 4096-bit RSA certificate with Subject Alternative Names (SAN)
+# Генератор TLS-сертификатов HoneyForge (MASK-1)
+# Создает самоподписанный сертификат RSA 4096 бит с альтернативными именами субъекта (SAN)
 # ==============================================================================
 
 set -euo pipefail
